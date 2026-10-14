@@ -1,0 +1,46 @@
+{
+  "schema": "fairlead.gate/0.1",
+  "gate_id": "web_access",
+  "version": "0.1.0",
+  "fingerprint": "jcs1:sha256:fb503b7a302c470d4c2bcff5caa1cc85ca8e2dfa9f977d0d1527336d4e1d7179",
+  "protocol": "gate_io/0.1",
+  "scripts": [
+    {
+      "runtime": "python",
+      "entry": "gate.py",
+      "script_fingerprint": "raw:sha256:aed38893e496afb75d659ebcc55c7fa7bd22f85e114db0233c752394c7936da3"
+    },
+    {
+      "runtime": "js",
+      "entry": "gate.js",
+      "script_fingerprint": "raw:sha256:e3a5e10d63f89b07cfde65aa065635f971b1fbb3a08085fa4ab5b55d5474cdee"
+    }
+  ],
+  "applies_to": [],
+  "config": {
+    "probes": [
+      {
+        "host": "api.crossref.org",
+        "url": "https://api.crossref.org/works?rows=0"
+      },
+      {
+        "host": "api.openalex.org",
+        "url": "https://api.openalex.org/works?per-page=1"
+      },
+      {
+        "host": "export.arxiv.org",
+        "url": "https://export.arxiv.org/api/query?search_query=all%3Aelectron&max_results=1"
+      }
+    ]
+  },
+  "network": {
+    "allow": [
+      "api.crossref.org",
+      "api.openalex.org",
+      "export.arxiv.org"
+    ]
+  },
+  "reads_rows": false,
+  "timeout_s": 300,
+  "vectors": "vectors/"
+}

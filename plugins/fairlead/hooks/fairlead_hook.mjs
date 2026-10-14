@@ -1,0 +1,693 @@
+import { createRequire as __fl_cr } from 'node:module'; const require = __fl_cr(import.meta.url);
+
+// packages/hooks/dist/cli.js
+import { readFileSync as readFileSync3 } from "node:fs";
+
+// packages/hooks/dist/hooks.js
+import { createHash as createHash2 } from "node:crypto";
+import { existsSync as existsSync2, mkdirSync as mkdirSync2, readFileSync as readFileSync2, realpathSync, writeFileSync as writeFileSync2 } from "node:fs";
+import { homedir, hostname } from "node:os";
+import { dirname, isAbsolute, join as join2, resolve, sep } from "node:path";
+
+// packages/canon/dist/index.js
+import { createHash } from "node:crypto";
+
+// node_modules/canonicalize/lib/canonicalize.js
+function serializeString(value) {
+  if (!value.isWellFormed()) {
+    throw new Error("Lone surrogate is not allowed");
+  }
+  return JSON.stringify(value);
+}
+function serializePrimitive(value) {
+  switch (typeof value) {
+    case "number":
+      if (isNaN(value)) {
+        throw new Error("NaN is not allowed");
+      }
+      if (!isFinite(value)) {
+        throw new Error("Infinity is not allowed");
+      }
+      return JSON.stringify(value);
+    case "string":
+      return serializeString(value);
+    case "boolean":
+      return value ? "true" : "false";
+    default:
+      return JSON.stringify(value);
+  }
+}
+function enterValue(value, seen) {
+  let wrappers = null;
+  while (value !== null && typeof value === "object" && typeof value.toJSON === "function") {
+    if (seen.has(value)) {
+      throw new Error("Circular reference detected");
+    }
+    seen.add(value);
+    (wrappers ??= []).push(value);
+    value = value.toJSON();
+  }
+  if (value instanceof Number || value instanceof String || value instanceof Boolean) {
+    value = value.valueOf();
+  }
+  if (value === null || typeof value !== "object") {
+    if (wrappers !== null) {
+      for (const wrapper of wrappers) seen.delete(wrapper);
+    }
+    return serializePrimitive(value);
+  }
+  if (seen.has(value)) {
+    throw new Error("Circular reference detected");
+  }
+  seen.add(value);
+  return {
+    container: value,
+    // null marks an array frame; object frames carry their sorted keys.
+    // `sort()`'s default comparator orders by UTF-16 code unit, which is the
+    // order JCS requires.
+    keys: Array.isArray(value) ? null : Object.keys(value).sort(),
+    // Next child to serialize; the frame resumes here after a nested
+    // container's subtree completes.
+    index: 0,
+    // Whether no member has been emitted yet (controls comma placement).
+    first: true,
+    // toJSON wrappers to release from `seen` when this frame completes.
+    wrappers
+  };
+}
+function canonicalize(object) {
+  if (object === null || typeof object !== "object") {
+    return serializePrimitive(object);
+  }
+  const seen = /* @__PURE__ */ new Set();
+  const root = enterValue(object, seen);
+  if (typeof root !== "object") {
+    return root;
+  }
+  let result = root.keys === null ? "[" : "{";
+  const stack = [root];
+  outer:
+    while (stack.length > 0) {
+      const frame = stack[stack.length - 1];
+      const container = frame.container;
+      if (frame.keys === null) {
+        while (frame.index < container.length) {
+          const i = frame.index++;
+          if (i > 0) {
+            result += ",";
+          }
+          const element = container[i];
+          const value = element === void 0 || typeof element === "symbol" || typeof element === "function" ? null : element;
+          if (value === null || typeof value !== "object") {
+            result += serializePrimitive(value);
+            continue;
+          }
+          const child = enterValue(value, seen);
+          if (typeof child !== "object") {
+            result += child === void 0 ? "null" : child;
+            continue;
+          }
+          result += child.keys === null ? "[" : "{";
+          stack.push(child);
+          continue outer;
+        }
+        result += "]";
+      } else {
+        const keys = frame.keys;
+        while (frame.index < keys.length) {
+          const key = keys[frame.index++];
+          const value = container[key];
+          if (value === void 0 || typeof value === "symbol" || typeof value === "function") {
+            continue;
+          }
+          if (value === null || typeof value !== "object") {
+            if (frame.first) {
+              frame.first = false;
+            } else {
+              result += ",";
+            }
+            result += serializeString(key) + ":" + serializePrimitive(value);
+            continue;
+          }
+          const child = enterValue(value, seen);
+          if (child === void 0) {
+            continue;
+          }
+          if (frame.first) {
+            frame.first = false;
+          } else {
+            result += ",";
+          }
+          result += serializeString(key) + ":";
+          if (typeof child !== "object") {
+            result += child;
+            continue;
+          }
+          result += child.keys === null ? "[" : "{";
+          stack.push(child);
+          continue outer;
+        }
+        result += "}";
+      }
+      seen.delete(container);
+      if (frame.wrappers !== null) {
+        for (const wrapper of frame.wrappers) seen.delete(wrapper);
+      }
+      stack.pop();
+    }
+  return result;
+}
+
+// packages/canon/dist/index.js
+var MAX_DEPTH = 100;
+var CanonError = class extends Error {
+  name = "CanonError";
+};
+var UTF8 = new TextEncoder();
+function check(value, path, seen, depth = 0) {
+  if (value === null || typeof value === "boolean")
+    return;
+  if (typeof value === "string") {
+    if (!value.isWellFormed())
+      throw new CanonError(`lone surrogate at ${path}`);
+    return;
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value))
+      throw new CanonError(`non-finite number at ${path}`);
+    return;
+  }
+  if (typeof value !== "object")
+    throw new CanonError(`${typeof value} is not JSON, at ${path}`);
+  if (depth >= MAX_DEPTH)
+    throw new CanonError(`nested deeper than ${String(MAX_DEPTH)} at ${path}`);
+  if (seen.has(value))
+    throw new CanonError(`circular reference at ${path}`);
+  seen.add(value);
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      if (!(i in value))
+        throw new CanonError(`array hole at ${path}[${String(i)}]`);
+      check(value[i], `${path}[${String(i)}]`, seen, depth + 1);
+    }
+  } else {
+    const proto = Object.getPrototypeOf(value);
+    if (proto !== Object.prototype && proto !== null)
+      throw new CanonError(`not a plain object at ${path}`);
+    for (const [k, v] of Object.entries(value)) {
+      if (!k.isWellFormed())
+        throw new CanonError(`lone surrogate in a key at ${path}`);
+      if (v === void 0)
+        throw new CanonError(`undefined at ${path}.${k}`);
+      check(v, `${path}.${k}`, seen, depth + 1);
+    }
+  }
+  seen.delete(value);
+}
+function canonicalBytes(value) {
+  check(value, "$", /* @__PURE__ */ new Set());
+  let text;
+  try {
+    text = canonicalize(value);
+  } catch (err) {
+    throw new CanonError(err instanceof Error ? err.message : String(err));
+  }
+  if (text === void 0)
+    throw new CanonError("value has no JSON form");
+  return UTF8.encode(text);
+}
+var sha256Hex = (data) => createHash("sha256").update(data).digest("hex");
+function jcs1(value) {
+  return `jcs1:sha256:${sha256Hex(canonicalBytes(value))}`;
+}
+
+// packages/hooks/dist/spool.js
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { existsSync, linkSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+var SESSION_ID = /^[A-Za-z0-9_-]{1,128}$/;
+function sessionDir(dataDir2, sessionId) {
+  if (!SESSION_ID.test(sessionId))
+    throw new Error(`refusing unsafe session id ${JSON.stringify(sessionId)}`);
+  return join(dataDir2, "sessions", sessionId);
+}
+var tmpName = () => `.tmp-${String(process.pid)}-${randomBytes(6).toString("hex")}`;
+function readOrCreateKey(dataDir2, sessionId) {
+  const dir = sessionDir(dataDir2, sessionId);
+  const path = join(dir, "key");
+  if (existsSync(path))
+    return readFileSync(path);
+  mkdirSync(dir, { recursive: true });
+  const tmp = join(dir, tmpName());
+  writeFileSync(tmp, randomBytes(32));
+  try {
+    linkSync(tmp, path);
+  } catch (err) {
+    if (err.code !== "EEXIST")
+      throw err;
+  } finally {
+    rmSync(tmp, { force: true });
+  }
+  return readFileSync(path);
+}
+var mac = (key, json) => createHmac("sha256", key).update(json, "utf8").digest("hex");
+function sign(key, value) {
+  const json = JSON.stringify(value);
+  return `${mac(key, json)}
+${json}`;
+}
+function verify(key, text) {
+  const nl = text.indexOf("\n");
+  if (nl !== 64)
+    return null;
+  const given = Buffer.from(text.slice(0, nl), "hex");
+  const json = text.slice(nl + 1);
+  const want = Buffer.from(mac(key, json), "hex");
+  return given.length === want.length && timingSafeEqual(given, want) ? json : null;
+}
+var NAME = /^(\d{15})\.json$/;
+var nameOf = (n) => `${String(n).padStart(15, "0")}.json`;
+function writeEntry(dataDir2, entry) {
+  const key = readOrCreateKey(dataDir2, entry.session_id);
+  const dir = join(sessionDir(dataDir2, entry.session_id), "spool");
+  mkdirSync(dir, { recursive: true });
+  let n = readdirSync(dir).reduce((max, f) => Math.max(max, Number(NAME.exec(f)?.[1] ?? 0)), 0) + 1;
+  for (let tries = 0; tries < 1e3; tries++, n++) {
+    const tmp = join(dir, tmpName());
+    writeFileSync(tmp, sign(key, { ...entry, n }));
+    const path = join(dir, nameOf(n));
+    try {
+      linkSync(tmp, path);
+      return path;
+    } catch (err) {
+      if (err.code !== "EEXIST")
+        throw err;
+    } finally {
+      rmSync(tmp, { force: true });
+    }
+  }
+  throw new Error("could not claim a spool number");
+}
+function readState(dataDir2, sessionId) {
+  const dir = sessionDir(dataDir2, sessionId);
+  const path = join(dir, "state.json");
+  const keyPath = join(dir, "key");
+  if (!existsSync(path))
+    return { status: "absent" };
+  if (!existsSync(keyPath))
+    return { status: "invalid" };
+  const json = verify(readFileSync(keyPath), readFileSync(path, "utf8"));
+  if (json === null)
+    return { status: "invalid" };
+  return { status: "ok", state: JSON.parse(json) };
+}
+
+// packages/hooks/dist/hooks.js
+var MCP = "mcp__plugin_fairlead_fairlead__";
+var START = `${MCP}fairlead_run_start`;
+var CALLER_TOOLS = /* @__PURE__ */ new Set([`${MCP}fairlead_inputs`, `${MCP}fairlead_output`]);
+var SPAWN_TOOLS = /* @__PURE__ */ new Set(["Agent", "Task"]);
+var ROUTE_TOOLS = /* @__PURE__ */ new Set(["SendMessage", "Workflow"]);
+var WRITE_TOOLS = /* @__PURE__ */ new Set(["Write", "Edit", "MultiEdit", "NotebookEdit"]);
+var READ_TOOLS = /* @__PURE__ */ new Set(["Read", "Grep", "Glob"]);
+var SHELL_TOOLS = /* @__PURE__ */ new Set(["Bash", "PowerShell", "Monitor"]);
+var TICKET_TOKEN = /tkt_[0-9A-HJKMNP-TV-Z]{26}/;
+var fp = (text) => `raw:sha256:${createHash2("sha256").update(text, "utf8").digest("hex")}`;
+function runOf(dataDir2, sessionId) {
+  const r = readState(dataDir2, sessionId);
+  if (r.status === "absent")
+    return { kind: "none" };
+  if (r.status === "invalid")
+    return { kind: "invalid" };
+  const s = r.state;
+  return s.open && !s.delivered && !s.abandoned ? { kind: "open", state: s } : { kind: "closed", state: s };
+}
+var WIN = process.platform === "win32";
+var BS = String.fromCharCode(92);
+function real(p) {
+  let head = p;
+  const tail = [];
+  for (let i = 0; i < 64; i++) {
+    try {
+      return join2(realpathSync.native(head), ...tail.reverse());
+    } catch {
+      const parent = dirname(head);
+      if (parent === head)
+        return p;
+      tail.push(head.slice(parent.length).replace(/^[/\\]+/, ""));
+      head = parent;
+    }
+  }
+  return p;
+}
+function norm(p, cwd) {
+  let s = p;
+  if (WIN) {
+    s = s.replace(/^[/\\]{2}[?.][/\\]UNC[/\\]/i, BS + BS).replace(/^[/\\]{2}[?.][/\\]/, "");
+    const share = /^[/\\]{2}[^/\\]+[/\\]([A-Za-z])\$(?:[/\\](.*))?$/.exec(s);
+    if (share)
+      s = `${share[1] ?? "c"}:${BS}${share[2] ?? ""}`;
+  }
+  const abs = real(resolve(isAbsolute(s) ? s : resolve(cwd, s)));
+  return WIN ? abs.replaceAll("/", BS).toLowerCase() : abs;
+}
+function localUncOrDevice(text) {
+  if (!WIN)
+    return false;
+  const t = text.toLowerCase();
+  if (/[/\\]{2}[?.][/\\](?![a-z]:)/.test(t))
+    return true;
+  const hosts = ["localhost", "127.0.0.1", "::1", "[::1]", "0:0:0:0:0:0:0:1", hostname().toLowerCase()];
+  return hosts.some((h) => new RegExp(`(^|[^/\\\\])[/\\\\]{2}${h.replace(/[.[\]:]/g, (ch) => `\\${ch}`)}[/\\\\]`).test(t));
+}
+function expandHome(command) {
+  const home = homedir();
+  const h = WIN ? home.toLowerCase() : home;
+  return command.replace(/(^|[\s"'=(])~(?=[/\\])/g, (_m, pre) => `${pre}${h}`).replace(/\$\{home\}|\$home|%userprofile%|\$env:userprofile/gi, h);
+}
+function spellings(normalised) {
+  const fwd = normalised.split(BS).join("/");
+  const out = [normalised, fwd];
+  const m = /^([a-z]):\//.exec(fwd);
+  if (m?.[1])
+    out.push(`/${m[1]}/${fwd.slice(3)}`);
+  return out;
+}
+var within = (p, root) => p === root || p.startsWith(root.endsWith(sep) ? root : root + sep);
+function deny(reason) {
+  return JSON.stringify({
+    hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: reason }
+  });
+}
+function textOf(content) {
+  if (typeof content === "string")
+    return content;
+  if (Array.isArray(content)) {
+    return content.map((b) => b && typeof b === "object" && "text" in b ? String(b.text) : "").join("\n");
+  }
+  return "";
+}
+function ticketToken(transcript) {
+  if (!transcript || !existsSync2(transcript))
+    return null;
+  try {
+    for (const line of readFileSync2(transcript, "utf8").split("\n")) {
+      if (!line.trim())
+        continue;
+      const m = JSON.parse(line);
+      if (m.type === "user")
+        return TICKET_TOKEN.exec(textOf(m.message?.content))?.[0] ?? null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+function pathsOf(tool, input) {
+  const keys = ["file_path", "path", "notebook_path"];
+  const out = keys.map((k) => input[k]).filter((v) => typeof v === "string" && v.length > 0);
+  if (tool === "Glob" && typeof input.pattern === "string" && isAbsolute(input.pattern)) {
+    out.push(input.pattern.split(/[*?[{]/)[0] ?? input.pattern);
+  }
+  if ((tool === "Grep" || tool === "Glob") && out.length === 0)
+    out.push(".");
+  return out;
+}
+function claimTicket(dataDir2, sessionId, ticketId) {
+  const dir = join2(sessionDir(dataDir2, sessionId), "claims");
+  mkdirSync2(dir, { recursive: true });
+  try {
+    writeFileSync2(join2(dir, ticketId), "", { flag: "wx" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+function spawnGate(input, run, dataDir2) {
+  const tool = input.tool_name ?? "";
+  const ti = input.tool_input ?? {};
+  const facts = {};
+  const subagentType = typeof ti.subagent_type === "string" ? ti.subagent_type : null;
+  if (SPAWN_TOOLS.has(tool)) {
+    facts.subagent_type = subagentType;
+    facts.prompt_fp = typeof ti.prompt === "string" ? fp(ti.prompt) : null;
+    facts.run_in_background = ti.run_in_background === true;
+  }
+  if ((run.kind === "none" || run.kind === "closed") && SPAWN_TOOLS.has(tool) && subagentType?.startsWith("fairlead:")) {
+    return {
+      hook_id: "BH-1",
+      checks: [{ hook_id: "BH-1", check: "ticket_prompt", result: "deny", subject_fp: typeof facts.prompt_fp === "string" ? facts.prompt_fp : null }],
+      facts,
+      refusal: "Fairlead: a Fairlead agent starts only for a step of an open run, with its ticket (start the run with the fairlead:review skill)."
+    };
+  }
+  if (run.kind === "none" || run.kind === "closed")
+    return { hook_id: "BH-1", checks: [], facts, refusal: null };
+  if (SPAWN_TOOLS.has(tool) && ti.resume !== void 0) {
+    return {
+      hook_id: "BH-1",
+      checks: [{ hook_id: "BH-1", check: "ticket_prompt", result: "deny", subject_fp: typeof facts.prompt_fp === "string" ? facts.prompt_fp : null }],
+      facts,
+      refusal: "Fairlead: resuming an agent is not allowed while a braid run is open; each step's subagent starts fresh with its ticket."
+    };
+  }
+  if (ROUTE_TOOLS.has(tool)) {
+    return {
+      hook_id: "BH-1",
+      checks: [{ hook_id: "BH-1", check: "agent_type", result: "deny", tool }],
+      facts,
+      refusal: `Fairlead: ${tool} is not allowed while a braid run is open; subagents start only through their step's ticket.`
+    };
+  }
+  const tickets = run.kind === "open" ? run.state.tickets : [];
+  const promptFp = typeof facts.prompt_fp === "string" ? facts.prompt_fp : null;
+  const ticket = tickets.find((t) => t.state === "issued" && t.prompt_fp === promptFp) ?? null;
+  const checks = [];
+  const add = (check2, ok, extra = {}) => {
+    checks.push({ hook_id: "BH-1", check: check2, result: ok ? "allow" : "deny", ...extra });
+  };
+  add("ticket_prompt", ticket !== null, { subject_fp: promptFp, ticket_id: ticket?.ticket_id ?? null });
+  add("agent_type", ticket !== null && facts.subagent_type === ticket.agent_type, { ticket_id: ticket?.ticket_id ?? null });
+  add("foreground", facts.run_in_background !== true);
+  if (ticket && (ticket.kind === "check" || ticket.kind === "recheck"))
+    add("gates_before_check", ticket.gates_ok, { ticket_id: ticket.ticket_id });
+  if (ticket)
+    add("decision_before_step", ticket.decision_ok, { ticket_id: ticket.ticket_id });
+  if (ticket && !checks.some((c) => c.result === "deny") && !claimTicket(dataDir2, input.session_id, ticket.ticket_id)) {
+    const tp = checks.find((c) => c.check === "ticket_prompt");
+    if (tp)
+      tp.result = "deny";
+  }
+  const failed = checks.find((c) => c.result === "deny");
+  const reasons = {
+    ticket_prompt: run.kind === "invalid" ? "Fairlead: the run state could not be verified, so no subagent may start." : "Fairlead: during a braid run a subagent starts only with its step's ticket as the whole prompt (call fairlead_ticket).",
+    agent_type: "Fairlead: this ticket is for a different agent type.",
+    foreground: "Fairlead: ticketed steps run in the foreground; do not set run_in_background.",
+    gates_before_check: "Fairlead: this check cannot start until its gates have passed (call fairlead_gate first).",
+    decision_before_step: "Fairlead: this step waits for the person's decision (ask them, then call fairlead_decision)."
+  };
+  return { hook_id: "BH-1", checks, facts, refusal: failed ? reasons[failed.check] ?? "Fairlead: refused" : null };
+}
+function pathGuard(input, run, dataDir2) {
+  const tool = input.tool_name ?? "";
+  const ti = input.tool_input ?? {};
+  const facts = {};
+  if (CALLER_TOOLS.has(tool)) {
+    const ok = typeof input.agent_id === "string" && input.agent_id.length > 0;
+    return {
+      hook_id: "BH-2",
+      checks: [{ hook_id: "BH-2", check: "caller_context", result: ok ? "allow" : "deny" }],
+      facts,
+      refusal: ok ? null : "Fairlead: this tool is for the step's subagent, not the main conversation."
+    };
+  }
+  const fileTool = WRITE_TOOLS.has(tool) || READ_TOOLS.has(tool) || SHELL_TOOLS.has(tool);
+  if (!fileTool || run.kind === "none" || run.kind === "closed")
+    return { hook_id: "BH-2", checks: [], facts, refusal: null };
+  const state = run.kind === "open" ? run.state : null;
+  const cwd = input.cwd ?? process.cwd();
+  const n = (p) => norm(p, cwd);
+  const secret = [n(dataDir2)];
+  if (input.transcript_path) {
+    secret.push(n(input.transcript_path), n(join2(dirname(input.transcript_path), input.session_id)));
+  }
+  const protectedRoots = [...state?.protected.map(n) ?? [], ...state ? [n(state.run_folder)] : [], ...secret];
+  const datafiles = state?.datafile.map(n) ?? [];
+  const checks = [];
+  let refusal = null;
+  const verdict = (check2, bad, why) => {
+    checks.push({ hook_id: "BH-2", check: check2, result: bad ? "deny" : "allow" });
+    if (bad && refusal === null)
+      refusal = why;
+  };
+  if (SHELL_TOOLS.has(tool)) {
+    const command = typeof ti.command === "string" ? ti.command : "";
+    const c = expandHome(WIN ? command.toLowerCase() : command);
+    const cf = c.split(BS).join("/");
+    const named = (roots) => roots.some((r) => spellings(r).some((s) => c.includes(s) || cf.includes(s.split(BS).join("/"))));
+    const byName = /claude_plugin_data|plugins[/\\]data/i.test(command) || localUncOrDevice(command);
+    verdict("protected_path", byName || named(protectedRoots), "Fairlead: that command reaches a protected or private path.");
+    if (datafiles.length)
+      verdict("datafile_path", named(datafiles), "Fairlead: that command names a declared datafile, which stays out of the AI's context.");
+    return { hook_id: "BH-2", checks, facts, refusal };
+  }
+  const rawPaths = pathsOf(tool, ti);
+  const paths = rawPaths.map(n);
+  const covers = (p, root) => within(p, root) || within(root, p);
+  if (rawPaths.some(localUncOrDevice)) {
+    verdict("protected_path", true, "Fairlead: device and network paths to this computer are not allowed during a braid run.");
+  } else if (WRITE_TOOLS.has(tool)) {
+    verdict("protected_path", paths.some((p) => protectedRoots.some((r) => within(p, r))), "Fairlead: that path is protected during a braid run.");
+  } else if (tool === "Grep" || tool === "Glob") {
+    verdict("protected_path", paths.some((p) => secret.some((r) => covers(p, r))), "Fairlead: that search would reach files private to the Fairlead plugin.");
+  } else {
+    verdict("protected_path", paths.some((p) => secret.some((r) => within(p, r))), "Fairlead: that file is private to the Fairlead plugin.");
+  }
+  if (datafiles.length) {
+    verdict("datafile_path", paths.some((p) => datafiles.some((d) => within(p, d))), "Fairlead: that datafile stays out of the AI's context; its pipeline reads it.");
+  }
+  return { hook_id: "BH-2", checks, facts, refusal };
+}
+function observer(input, run) {
+  const facts = {};
+  const checks = [];
+  const keep = (text) => {
+    if (run.kind === "open")
+      facts.answer_text = text.slice(0, 2e3);
+  };
+  if (input.hook_event_name === "UserPromptSubmit") {
+    const text = input.prompt ?? "";
+    facts.via = "user_prompt";
+    facts.answer_fp = fp(text);
+    keep(text);
+    return { hook_id: "BH-3", checks, facts, refusal: null };
+  }
+  const tool = input.tool_name ?? "";
+  if (tool === START)
+    checks.push({ hook_id: "BH-3", check: "heartbeat", result: "allow" });
+  if (tool === "AskUserQuestion" && !input.agent_id) {
+    const r = input.tool_response;
+    const text = JSON.stringify(r?.answers ?? r ?? null);
+    facts.via = "ask_user_question";
+    facts.answer_fp = fp(text);
+    keep(text);
+  }
+  if (READ_TOOLS.has(tool) && run.kind === "open") {
+    const cwd = input.cwd ?? process.cwd();
+    for (const p of pathsOf(tool, input.tool_input ?? {})) {
+      const hit = run.state.watched.find((w) => norm(w.path, cwd) === norm(p, cwd));
+      if (hit) {
+        facts.path = hit.path;
+        facts.path_class = hit.class;
+        facts.fingerprint = existsSync2(hit.path) ? `raw:sha256:${createHash2("sha256").update(readFileSync2(hit.path)).digest("hex")}` : null;
+        break;
+      }
+    }
+  }
+  return { hook_id: "BH-3", checks, facts, refusal: null };
+}
+function subagentClose(input) {
+  return {
+    hook_id: "BH-4",
+    checks: [],
+    facts: {
+      agent_transcript_path: input.agent_transcript_path ?? null,
+      ticket_token: ticketToken(input.agent_transcript_path),
+      last_message_fp: fp(input.last_assistant_message ?? "")
+    },
+    refusal: null
+  };
+}
+function stopGuard(run, input) {
+  if (run.kind === "none")
+    return { hook_id: "BH-5", checks: [], facts: {}, refusal: null };
+  const open = run.kind === "open" && input.stop_hook_active !== true;
+  const reason = "Fairlead: a braid run is still open. Finish it with fairlead_deliver, or ask the person whether to abandon it and record their answer with fairlead_decision (kind abandon).";
+  return {
+    hook_id: "BH-5",
+    checks: [{ hook_id: "BH-5", check: "run_open_at_stop", result: open ? "deny" : "allow" }],
+    facts: {},
+    refusal: open ? reason : null,
+    stdout: open ? JSON.stringify({ decision: "block", reason }) : null
+  };
+}
+function handleHook(input, ctx) {
+  const run = runOf(ctx.dataDir, input.session_id);
+  const tool = input.tool_name ?? "";
+  let d;
+  let inputFp = null;
+  switch (input.hook_event_name) {
+    case "PreToolUse":
+      if (tool === START) {
+        inputFp = jcs1(input.tool_input ?? {});
+        d = {
+          hook_id: "BH-1",
+          checks: [
+            { hook_id: "BH-1", check: "heartbeat", result: "allow" },
+            { hook_id: "BH-2", check: "heartbeat", result: "allow" }
+          ],
+          facts: {},
+          refusal: null
+        };
+      } else if (SPAWN_TOOLS.has(tool) || ROUTE_TOOLS.has(tool))
+        d = spawnGate(input, run, ctx.dataDir);
+      else
+        d = pathGuard(input, run, ctx.dataDir);
+      break;
+    case "PostToolUse":
+      if (tool === START)
+        inputFp = jcs1(input.tool_input ?? {});
+      d = observer(input, run);
+      break;
+    case "UserPromptSubmit":
+      d = observer(input, run);
+      break;
+    case "SubagentStart":
+    case "SubagentStop":
+      d = subagentClose(input);
+      if (input.hook_event_name === "SubagentStart")
+        d.facts = {};
+      break;
+    case "Stop":
+      d = stopGuard(run, input);
+      break;
+    default:
+      d = { hook_id: "BH-3", checks: [], facts: {}, refusal: null };
+  }
+  const entry = {
+    v: 1,
+    n: 0,
+    // assigned by writeEntry
+    session_id: input.session_id,
+    at: (ctx.now ?? Date.now)(),
+    hook_id: d.hook_id,
+    event: input.hook_event_name,
+    tool: tool || null,
+    tool_use_id: input.tool_use_id ?? null,
+    agent_id: input.agent_id ?? null,
+    agent_type: input.agent_type ?? null,
+    input_fp: inputFp,
+    facts: d.facts,
+    checks: d.checks,
+    decision: d.refusal === null ? "allow" : "deny"
+  };
+  const file = writeEntry(ctx.dataDir, entry);
+  entry.n = Number(/(\d+)\.json$/.exec(file)?.[1] ?? 0);
+  const stdout = d.stdout !== void 0 ? d.stdout : d.refusal === null ? null : deny(d.refusal);
+  return { entry, stdout };
+}
+
+// packages/hooks/dist/cli.js
+var dataDir = process.env.CLAUDE_PLUGIN_DATA ?? "";
+if (dataDir) {
+  try {
+    const input = JSON.parse(readFileSync3(0, "utf8"));
+    const { stdout } = handleHook(input, { dataDir });
+    if (stdout !== null)
+      process.stdout.write(stdout);
+  } catch (err) {
+    process.stderr.write(`fairlead hook: ${err instanceof Error ? err.message : String(err)}
+`);
+  }
+}
+process.exitCode = 0;

@@ -1,0 +1,14 @@
+{
+  "name": "fairlead",
+  "owner": {
+    "name": "Heuris Pty Ltd"
+  },
+  "plugins": [
+    {
+      "name": "fairlead",
+      "source": "./plugins/fairlead",
+      "description": "Fairlead braids for Claude Code: a literature scoping review with code-checked references and blind checkers, and an honest run record.",
+      "version": "0.1.0"
+    }
+  ]
+}

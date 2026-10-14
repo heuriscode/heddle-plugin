@@ -1,0 +1,21 @@
+{
+  "schema": "fairlead.type/0.1",
+  "type_id": "evidence_table",
+  "version": "0.1.0",
+  "fingerprint": "jcs1:sha256:63ab05f6b07b2d578ae9760b4c567b27e4d2654e843f8688caaac9c1e123bbc5",
+  "title": "Evidence table",
+  "description": "One row per included work: approach, data, what is elicited, key findings with anchors, evidence strength.",
+  "contract": "evidence_table",
+  "media_types": [
+    "application/json"
+  ],
+  "datafile_capable": false,
+  "required_gates": [
+    "quote_gate"
+  ],
+  "menu_formats": [
+    "csv",
+    "table",
+    "json"
+  ]
+}

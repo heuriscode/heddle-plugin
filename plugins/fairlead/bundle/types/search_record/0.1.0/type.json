@@ -1,0 +1,19 @@
+{
+  "schema": "fairlead.type/0.1",
+  "type_id": "search_record",
+  "version": "0.1.0",
+  "fingerprint": "jcs1:sha256:85d618e821053877704fdf2fa34a03553cb85a0967a66f96317eced59226d305",
+  "title": "Search record",
+  "description": "The search protocol, search log and screening log, written before and during the search.",
+  "contract": null,
+  "media_types": [
+    "text/markdown"
+  ],
+  "datafile_capable": false,
+  "required_gates": [],
+  "menu_formats": [
+    "md",
+    "html",
+    "docx"
+  ]
+}
