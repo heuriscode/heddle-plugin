@@ -1,19 +1,19 @@
 {
   "schema": "fairlead.gate/0.1",
   "gate_id": "claim_rules_gate",
-  "version": "0.2.0",
-  "fingerprint": "jcs1:sha256:112fa7f8bdd19d727626fd80b329d313aa004dcf34978cc361ea4bc3c981b2c2",
+  "version": "0.3.0",
+  "fingerprint": "jcs1:sha256:5385401bb3b32174df3184dd6ba85196d880a050bc6e487710aba192a44fcff5",
   "protocol": "gate_io/0.1",
   "scripts": [
     {
       "runtime": "python",
       "entry": "gate.py",
-      "script_fingerprint": "raw:sha256:d9f24d034ace429def14692e2528198098c27a82482b674dfd088f3530098586"
+      "script_fingerprint": "raw:sha256:7ef32917bee449a87cf8252febc33b4c7da7ce4291108bef61fa49df27d8a446"
     },
     {
       "runtime": "js",
       "entry": "gate.js",
-      "script_fingerprint": "raw:sha256:5c0a352f32abda05b82bf5221f97bcf1279bb4561dd82ff47027334fcc949184"
+      "script_fingerprint": "raw:sha256:f5a701540275dbda61e0f0a5eb532455585b11ce7c789f74c398814acf0ef65c"
     }
   ],
   "applies_to": [

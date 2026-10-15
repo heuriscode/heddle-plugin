@@ -2,13 +2,18 @@
   "gates": {
     "cite_gate@0.1.0": "jcs1:sha256:229b592a862484d48f0ac362a90a7ba8012c6c156ebc52fa5296c9adbb275ace",
     "cite_gate@0.2.0": "jcs1:sha256:62c393315a20e2f08fcecb42032bed79a68ce68bb01e62461a15566cf326f91d",
+    "cite_gate@0.3.0": "jcs1:sha256:9b6eac5dc265750f783dead05e97f19287d756807437dc8d09826fa9498d40f1",
+    "cite_gate@0.4.0": "jcs1:sha256:3ef16647bb625457d6a062cd60d0bd45e3fde284b8cdd96e9bb73ddd417dbe18",
     "claim_rules_gate@0.1.0": "jcs1:sha256:1200079f6b7f07301fedd0b37581883c2a17a3ce7402a63d7fd7f9b69130be2c",
     "claim_rules_gate@0.2.0": "jcs1:sha256:112fa7f8bdd19d727626fd80b329d313aa004dcf34978cc361ea4bc3c981b2c2",
+    "claim_rules_gate@0.3.0": "jcs1:sha256:5385401bb3b32174df3184dd6ba85196d880a050bc6e487710aba192a44fcff5",
     "option_map_gate@0.1.0": "jcs1:sha256:916f6e4c12d59836f64eac1a3712e3f1f7284139f6da5148b1906d131338ec4c",
     "quote_gate@0.1.0": "jcs1:sha256:6563140bb5f693e1a1df030b0cb939be19c0453824c8feb103a6e1f8874fb429",
     "quote_gate@0.2.0": "jcs1:sha256:100b811d4f6ac3d5f86c42b08bb9cb8318556af6fcb46b8deb68e9cc99fb35f9",
     "revision_gate@0.1.0": "jcs1:sha256:c4af3cb888b00f38232cdeca61169b9315fd42e2523d943220dddf01f79dc3a8",
     "revision_gate@0.2.0": "jcs1:sha256:39c116061f1b1c4d81237b69fd3cdc30148af92dd1721c3cda009f31961a5067",
+    "revision_gate@0.3.0": "jcs1:sha256:33458ddb727b2c2fe9f9017d89801137b45321ae1140f545a08d2df86f91de77",
+    "revision_gate@0.4.0": "jcs1:sha256:2ee9f803f3c830fb460542ebb0e04e6883121193ff750e3ea7b92b29ef594a93",
     "web_access@0.1.0": "jcs1:sha256:fb503b7a302c470d4c2bcff5caa1cc85ca8e2dfa9f977d0d1527336d4e1d7179"
   },
   "preambles": {
@@ -32,6 +37,16 @@
       "core": "jcs1:sha256:0a69da2a7b2606762c79f895d4e5ace86253abba4fcc0af1321063d214ceee34",
       "free_bundle": "jcs1:sha256:f58611ebe3c5373786ac4a082c77573732272a9f66c9cd2eb220a6d23c809367",
       "report": null
+    },
+    "fairlead.lit_scoping_review@0.3.0": {
+      "core": "jcs1:sha256:64b847e33091f1bebf53149d86589ad056985e1e7509b060dc2db060df3001e6",
+      "free_bundle": "jcs1:sha256:de68b385ac811d088bcd1e037af31b486261852ea4666e82681f150d374e4994",
+      "report": null
+    },
+    "fairlead.lit_scoping_review@0.4.0": {
+      "core": "jcs1:sha256:8af1075ce7fae4d95d330535017f74e1d195f18404999d86eb5a25c3467d9c4c",
+      "free_bundle": "jcs1:sha256:52dd1cfc984407c4264b323b83711a1717eefaa9e8e9b99604ca33fb5d9c861d",
+      "report": null
     }
   },
   "threads": {
@@ -43,6 +58,8 @@
     "extractor@0.1.0": "jcs1:sha256:888640aab9edde11b0e886af1a082126f22cd94ab1eccb9f7b87ba09cd2870e1",
     "reviser@0.1.0": "jcs1:sha256:8d48ba350b604444f31570e0928d2869c8b7b756eb043c2a906f045b2536d257",
     "reviser@0.2.0": "jcs1:sha256:010845576ffec5114db8bd6de4e6f42472af7851b374606997b3649e1398bc23",
+    "reviser@0.3.0": "jcs1:sha256:09e81f89e5f83403879b0e994efc20c7dcc50769a368c6206f546b8c0d253f36",
+    "reviser@0.4.0": "jcs1:sha256:ec29e0930602c43ddb97966d8a4c12aaed4d8495aa0f817610e82aaa1f7354df",
     "searcher@0.1.0": "jcs1:sha256:63c54fed60d669b3bf344248d7e21f80783f891781ffbf231fb7da816a64fa81"
   },
   "types": {

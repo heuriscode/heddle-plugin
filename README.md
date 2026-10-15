@@ -43,9 +43,9 @@ Then:
 - **Decide.** Claude shows you what the checkers found and what an adjudicator recommends. You decide what changes.
 - **Choose your results.** For example the review in Markdown or as a web page, and the evidence table as a spreadsheet file.
 
-A review takes a while, because each step does real work: our full test run took about 70 minutes. You can leave it running and come back when Claude asks you something.
+A review takes a while, because each step does real work: our three full test runs took 66 to 72 minutes. You can leave it running and come back when Claude asks you something.
 
-**It uses your Claude usage.** Fairlead runs on your own Claude account, and a review is a big job: several helpers each read the sources. On a Pro or Max plan it counts towards your plan's usage limits like any other Claude Code work. If you pay by the token, our full test run cost about US$10 at API rates (Sonnet, October 2026).
+**It uses your Claude usage.** Fairlead runs on your own Claude account, and a review is a big job: several helpers each read the sources. On a Pro or Max plan it counts towards your plan's usage limits like any other Claude Code work. If you pay by the token, our three full test runs cost US$9.44 to US$11.40 each at API rates (Sonnet, October 2026).
 
 ## What you get
 

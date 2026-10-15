@@ -183,155 +183,90 @@ def run(gate_id, gate_ref, check):
 # --- end gatekit ---
 
 
-GATE_ID = "cite_gate"
-GATE_REF = "cite_gate@0.2.0"
-ORDER = ["verified", "possible", "unverified_url", "lookup_error", "not_found", "doi_not_found",
-         "doi_title_mismatch", "unresolved_citation", "unsupported_claim", "no_references",
-         "reference_not_in_register", "duplicate_ref_id", "duplicate_register_id"]
-FAIL = {"unresolved_citation", "unsupported_claim", "no_references", "reference_not_in_register",
-        "duplicate_ref_id", "duplicate_register_id", "doi_title_mismatch", "doi_not_found", "not_found"}
-WARN = {"possible", "unverified_url", "lookup_error"}
-BRACKET = re.compile(r"\[([^\[\]]+)\]")
-MARKER = re.compile(r"^([A-Za-z](?=[A-Za-z0-9_.:-]*[0-9])[A-Za-z0-9_.:-]*)(?:,\s*(?:p\.\s*[0-9]+|pp\.\s*[0-9]+-[0-9]+))?$")
+GATE_ID = "claim_rules_gate"
+GATE_REF = "claim_rules_gate@0.3.0"
+ORDER = ["record_only_support", "absence_on_abstract", "unscoped_none"]
+ABSENCE = ["does not", "do not", "did not", "no evidence", "not report", "not compare", "not examine",
+           "not address", "fails to", "omits"]
+SCARCITY = ["no study", "no studies", "none of the", "few studies", "little evidence", "thin", "rarely", "scarce",
+            "no research"]
+SCOPE = ["screened", "searched", "read in full", "included in this review"]
+BRACKET = re.compile(r"[ \t]*\[([^\[\]]+)\]")
+MARKER = re.compile(r"^[A-Za-z](?=[A-Za-z0-9_.:-]*[0-9])[A-Za-z0-9_.:-]*"
+                    r"(?:,\s*(?:p\.\s*[0-9]+|pp\.\s*[0-9]+-[0-9]+))?$")
+POOL_NUMBER = re.compile(r"(?:^|[^0-9a-z,.])(?:[0-9][0-9,]* (?:works|studies|sources|papers|records|articles)"
+                         r"|of the (?!(?:19|20)[0-9]{2}(?![0-9]|,[0-9]))[0-9][0-9,]*)(?:$|[^0-9a-z])")
 
 
-def markers(text):
-    """Source ids cited in a paragraph's text, in order of first appearance. A bracket counts only when every
-    `;`-separated part is `id`, `id, p. N` or `id, pp. N-M`, where `id` starts with a letter and has a digit."""
-    out = []
-    for m in BRACKET.finditer(text):
-        parts = [p.strip() for p in m.group(1).split(";")]
-        found = [MARKER.match(p) for p in parts]
-        if all(found):
-            for f in found:
-                if f.group(1) not in out:
-                    out.append(f.group(1))
-    return out
+def first_phrase(folded, phrases):
+    padded = " " + folded + " "
+    for p in phrases:
+        if " " + p + " " in padded:
+            return p
+    return None
 
 
-def clean_doi(doi):
-    d = doi.strip().lower()
-    for prefix in ("https://doi.org/", "http://dx.doi.org/", "doi:"):
-        if d.startswith(prefix):
-            d = d[len(prefix):]
-            break
-    return d
+def strip_markers(text):
+    """Removes citation markers (every `;`-separated part is `id`, `id, p. N` or `id, pp. N-M`) and the
+    whitespace before them, so a marker's digits never count as a number."""
+    def repl(m):
+        parts = [x.strip() for x in m.group(1).split(";")]
+        return "" if all(MARKER.match(x) for x in parts) else m.group(0)
+    return BRACKET.sub(repl, text)
 
 
-def arxiv_titles(body):
-    titles = re.findall(r"<title[^>]*>(.*?)</title>", body, re.S)
-    return [decode_entities(t) for t in titles[1:]]
-
-
-def best_of(title, candidates):
-    best, found = 0, ""
-    for c in candidates:
-        s = similarity(title, c)
-        if s > best or not found:
-            best, found = s, c
-    return best, found
-
-
-def lookup(entry, refs):
-    """Returns (outcome, sim, found) for one register item; refs are the references naming it."""
-    title = entry.get("title") or ""
-    locator = entry.get("locator") or {}
-    doi = locator.get("doi") or next((r["doi"] for r in refs if r.get("doi")), None)
-    url = locator.get("url") or next((r["url"] for r in refs if r.get("url")), None)
-    if doi:
-        status, body = fetch(GATE_ID, "https://api.crossref.org/works/" + pct(clean_doi(doi), "/"))
-        if status == 200:
-            titles = (json.loads(body).get("message") or {}).get("title") or []
-            found = titles[0] if titles else ""
-            sim = similarity(title, found)
-            return ("verified" if sim >= 90 else "doi_title_mismatch"), sim, found
-        if status == 404:
-            return "doi_not_found", 0, ""
-        return "lookup_error", 0, ""
-    arxiv_id = locator.get("arxiv_id")
-    if arxiv_id:
-        status, body = fetch(GATE_ID, "https://export.arxiv.org/api/query?id_list=" + pct(arxiv_id))
-        if status != 200:
-            return "lookup_error", 0, ""
-        sim, found = best_of(title, arxiv_titles(body))
-        return ("verified" if sim >= 90 else "not_found"), sim, found
-    status, body = fetch(GATE_ID, "https://api.crossref.org/works?query.bibliographic=" + pct(title) + "&rows=5")
-    if status != 200:
-        return "lookup_error", 0, ""
-    items = (json.loads(body).get("message") or {}).get("items") or []
-    candidates = [i["title"][0] for i in items if i.get("title")]
-    sim, found = best_of(title, candidates)
-    if sim < 90:
-        status, body = fetch(GATE_ID, "https://export.arxiv.org/api/query?search_query="
-                             + pct('ti:"' + title + '"') + "&max_results=3")
-        if status != 200:
-            return "lookup_error", 0, ""
-        sim2, found2 = best_of(title, arxiv_titles(body))
-        if sim2 > sim:
-            sim, found = sim2, found2
-    if sim >= 90:
-        return "verified", sim, found
-    if sim >= 75:
-        return "possible", sim, found
-    if url:
-        return "unverified_url", sim, found
-    return "not_found", sim, found
+def unscoped_phrase(text):
+    """First scarcity phrase in a sentence with no pool scope: a number next to a pool noun (`54 works`,
+    `of the 54`) or one of the SCOPE phrases."""
+    for sentence in re.split(r"[.!?]+(?:[ \t\r\n]+|$)", strip_markers(text)):
+        folded = ascii_fold(sentence)
+        phrase = first_phrase(folded, SCARCITY)
+        if phrase is None:
+            continue
+        if POOL_NUMBER.search(" " + folded + " ") or first_phrase(folded, SCOPE):
+            continue
+        return phrase
+    return None
 
 
 def check(gate_input, load):
     draft = load(gate_input["target"])
     register = load(gate_input["extra_inputs"][0])
-    items = register.get("items") or []
-    register_ids = {e["source_id"] for e in items}
-    references = draft.get("references") or []
-    ref_sources = {r["source_id"] for r in references}
+    levels = {e["source_id"]: e.get("read_level") for e in register.get("items") or []}
+    for r in draft.get("references") or []:
+        levels[r["source_id"]] = r.get("read_level")
     counts = {k: 0 for k in ORDER}
     evidence = []
+    checked = 0
 
-    def flag(outcome, ref):
+    def flag(outcome, ref, phrase=None):
         counts[outcome] += 1
-        evidence.append({"ref": ref, "detail": outcome})
+        evidence.append({"ref": ref, "detail": outcome + ("; phrase=" + phrase if phrase else "")})
 
-    claims = []
     for si, section in enumerate(draft.get("sections") or [], 1):
         for pi, para in enumerate(section.get("paragraphs") or [], 1):
-            for sid in markers(para.get("text") or ""):
-                if sid not in ref_sources:
-                    flag("unresolved_citation", "%d.%d:%s" % (si, pi, sid))
-            claims.extend(para.get("claims") or [])
-    for claim in claims:
-        for sup in claim.get("support") or []:
-            if sup["source_id"] not in ref_sources:
-                flag("unresolved_citation", claim["claim_id"] + ":" + sup["source_id"])
-    for claim in claims:
-        if claim.get("kind") == "evidence" and not claim.get("support"):
-            flag("unsupported_claim", claim["claim_id"])
-    if claims and not references:
-        flag("no_references", "draft")
-    for ref in references:
-        if ref["source_id"] not in register_ids:
-            flag("reference_not_in_register", ref["ref_id"])
-    seen = set()
-    for ref in references:
-        if ref["ref_id"] in seen:
-            flag("duplicate_ref_id", ref["ref_id"])
-        seen.add(ref["ref_id"])
-    seen = set()
-    for entry in items:
-        if entry["source_id"] in seen:
-            flag("duplicate_register_id", entry["source_id"])
-        seen.add(entry["source_id"])
-    for entry in items:
-        refs = [r for r in references if r["source_id"] == entry["source_id"]]
-        outcome, sim, found = lookup(entry, refs)
-        counts[outcome] += 1
-        if outcome != "verified":
-            evidence.append({"ref": entry["source_id"], "detail": "%s; sim=%d; found=%s"
-                             % (outcome, sim, ascii_fold(found)[:120] or "-")})
-    failed = sum(counts[k] for k in FAIL)
-    status = "fail" if failed else ("warn" if any(counts[k] for k in WARN) else "pass")
+            checked += 1
+            phrase = unscoped_phrase(para.get("text") or "")
+            if phrase:
+                flag("unscoped_none", "%d.%d" % (si, pi), phrase)
+            for claim in para.get("claims") or []:
+                checked += 1
+                cid = claim["claim_id"]
+                support = claim.get("support") or []
+                sup_levels = [levels.get(s["source_id"]) for s in support]
+                if claim.get("kind") == "evidence" and support and all(v == "record" for v in sup_levels):
+                    flag("record_only_support", cid)
+                if support and all(v in ("abstract", "record") for v in sup_levels):
+                    phrase = first_phrase(ascii_fold(claim.get("text") or ""), ABSENCE)
+                    if phrase:
+                        flag("absence_on_abstract", cid, phrase)
+                phrase = unscoped_phrase(claim.get("text") or "")
+                if phrase:
+                    flag("unscoped_none", cid, phrase)
+    failed = counts["record_only_support"]
+    status = "fail" if failed else ("warn" if any(counts.values()) else "pass")
     summary = {"ref": "summary", "detail": " ".join("%s=%d" % (k, counts[k]) for k in ORDER)}
-    return status, len(items), failed, [summary] + evidence
+    return status, checked, failed, [summary] + evidence
 
 
 run(GATE_ID, GATE_REF, check)

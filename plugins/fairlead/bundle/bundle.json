@@ -1,8 +1,8 @@
 {
   "schema": "fairlead.braid_template/0.1",
   "template_id": "fairlead.lit_scoping_review",
-  "version": "0.2.0",
-  "fingerprint": "jcs1:sha256:f58611ebe3c5373786ac4a082c77573732272a9f66c9cd2eb220a6d23c809367",
+  "version": "0.4.0",
+  "fingerprint": "jcs1:sha256:52dd1cfc984407c4264b323b83711a1717eefaa9e8e9b99604ca33fb5d9c861d",
   "catalogue": {
     "command": "/fairlead:review",
     "title": "Literature scoping review",
@@ -124,8 +124,8 @@
       }
     },
     {
-      "thread_ref": "reviser@0.2.0",
-      "thread_fingerprint": "jcs1:sha256:010845576ffec5114db8bd6de4e6f42472af7851b374606997b3649e1398bc23",
+      "thread_ref": "reviser@0.4.0",
+      "thread_fingerprint": "jcs1:sha256:ec29e0930602c43ddb97966d8a4c12aaed4d8495aa0f817610e82aaa1f7354df",
       "role": "reviser",
       "tools": [
         "fetch",
@@ -198,7 +198,7 @@
     {
       "step_id": "s4",
       "kind": "gate",
-      "gate_ref": "cite_gate@0.2.0",
+      "gate_ref": "cite_gate@0.4.0",
       "needs": [
         "s3"
       ],
@@ -243,7 +243,7 @@
     {
       "step_id": "s4d",
       "kind": "gate",
-      "gate_ref": "claim_rules_gate@0.2.0",
+      "gate_ref": "claim_rules_gate@0.3.0",
       "needs": [
         "s3"
       ],
@@ -338,7 +338,7 @@
     {
       "step_id": "s7",
       "kind": "revise",
-      "thread_ref": "reviser@0.2.0",
+      "thread_ref": "reviser@0.4.0",
       "needs": [
         "s6d"
       ],
@@ -362,7 +362,7 @@
     {
       "step_id": "s8",
       "kind": "gate",
-      "gate_ref": "cite_gate@0.2.0",
+      "gate_ref": "cite_gate@0.4.0",
       "needs": [
         "s7"
       ],
@@ -407,7 +407,7 @@
     {
       "step_id": "s8d",
       "kind": "gate",
-      "gate_ref": "claim_rules_gate@0.2.0",
+      "gate_ref": "claim_rules_gate@0.3.0",
       "needs": [
         "s7"
       ],
@@ -422,7 +422,7 @@
     {
       "step_id": "s8e",
       "kind": "gate",
-      "gate_ref": "revision_gate@0.2.0",
+      "gate_ref": "revision_gate@0.4.0",
       "needs": [
         "s7"
       ],
@@ -493,10 +493,11 @@
       "on_fail": "block"
     },
     {
-      "gate_ref": "cite_gate@0.2.0",
-      "gate_fingerprint": "jcs1:sha256:62c393315a20e2f08fcecb42032bed79a68ce68bb01e62461a15566cf326f91d",
+      "gate_ref": "cite_gate@0.4.0",
+      "gate_fingerprint": "jcs1:sha256:3ef16647bb625457d6a062cd60d0bd45e3fde284b8cdd96e9bb73ddd417dbe18",
       "applies_to": [
-        "draft@0.1.0"
+        "draft@0.1.0",
+        "source_register@0.1.0"
       ],
       "before_checks": true,
       "on_fail": "block"
@@ -512,8 +513,8 @@
       "on_fail": "block"
     },
     {
-      "gate_ref": "claim_rules_gate@0.2.0",
-      "gate_fingerprint": "jcs1:sha256:112fa7f8bdd19d727626fd80b329d313aa004dcf34978cc361ea4bc3c981b2c2",
+      "gate_ref": "claim_rules_gate@0.3.0",
+      "gate_fingerprint": "jcs1:sha256:5385401bb3b32174df3184dd6ba85196d880a050bc6e487710aba192a44fcff5",
       "applies_to": [
         "draft@0.1.0"
       ],
@@ -521,8 +522,8 @@
       "on_fail": "block"
     },
     {
-      "gate_ref": "revision_gate@0.2.0",
-      "gate_fingerprint": "jcs1:sha256:39c116061f1b1c4d81237b69fd3cdc30148af92dd1721c3cda009f31961a5067",
+      "gate_ref": "revision_gate@0.4.0",
+      "gate_fingerprint": "jcs1:sha256:2ee9f803f3c830fb460542ebb0e04e6883121193ff750e3ea7b92b29ef594a93",
       "applies_to": [
         "revision_log@0.1.0"
       ],

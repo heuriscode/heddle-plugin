@@ -158,7 +158,7 @@ function run(gateId, gateRef, check) {
 // --- end gatekit ---
 
 const GATE_ID = "claim_rules_gate";
-const GATE_REF = "claim_rules_gate@0.2.0";
+const GATE_REF = "claim_rules_gate@0.3.0";
 const ORDER = ["record_only_support", "absence_on_abstract", "unscoped_none"];
 const ABSENCE = ["does not", "do not", "did not", "no evidence", "not report", "not compare", "not examine",
   "not address", "fails to", "omits"];
@@ -168,7 +168,7 @@ const SCOPE = ["screened", "searched", "read in full", "included in this review"
 const BRACKET = /[ \t]*\[([^\[\]]+)\]/g;
 const MARKER = /^[A-Za-z](?=[A-Za-z0-9_.:-]*[0-9])[A-Za-z0-9_.:-]*(?:,\s*(?:p\.\s*[0-9]+|pp\.\s*[0-9]+-[0-9]+))?$/;
 const POOL_NUMBER =
-  /(?:^|[^0-9a-z,.])(?:[0-9][0-9,]* (?:works|studies|sources|papers|records|articles)|of the [0-9][0-9,]*)(?:$|[^0-9a-z])/;
+  /(?:^|[^0-9a-z,.])(?:[0-9][0-9,]* (?:works|studies|sources|papers|records|articles)|of the (?!(?:19|20)[0-9]{2}(?![0-9]|,[0-9]))[0-9][0-9,]*)(?:$|[^0-9a-z])/;
 
 function firstPhrase(folded, phrases) {
   const padded = " " + folded + " ";
