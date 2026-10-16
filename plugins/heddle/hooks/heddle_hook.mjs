@@ -303,9 +303,9 @@ function readState(dataDir2, sessionId) {
 }
 
 // packages/hooks/dist/hooks.js
-var MCP = "mcp__plugin_fairlead_fairlead__";
-var START = `${MCP}fairlead_run_start`;
-var CALLER_TOOLS = /* @__PURE__ */ new Set([`${MCP}fairlead_inputs`, `${MCP}fairlead_output`]);
+var MCP = "mcp__plugin_heddle_heddle__";
+var START = `${MCP}heddle_run_start`;
+var CALLER_TOOLS = /* @__PURE__ */ new Set([`${MCP}heddle_inputs`, `${MCP}heddle_output`]);
 var SPAWN_TOOLS = /* @__PURE__ */ new Set(["Agent", "Task"]);
 var ROUTE_TOOLS = /* @__PURE__ */ new Set(["SendMessage", "Workflow"]);
 var WRITE_TOOLS = /* @__PURE__ */ new Set(["Write", "Edit", "MultiEdit", "NotebookEdit"]);
@@ -433,12 +433,12 @@ function spawnGate(input, run, dataDir2) {
     facts.prompt_fp = typeof ti.prompt === "string" ? fp(ti.prompt) : null;
     facts.run_in_background = ti.run_in_background === true;
   }
-  if ((run.kind === "none" || run.kind === "closed") && SPAWN_TOOLS.has(tool) && subagentType?.startsWith("fairlead:")) {
+  if ((run.kind === "none" || run.kind === "closed") && SPAWN_TOOLS.has(tool) && subagentType?.startsWith("heddle:")) {
     return {
       hook_id: "BH-1",
       checks: [{ hook_id: "BH-1", check: "ticket_prompt", result: "deny", subject_fp: typeof facts.prompt_fp === "string" ? facts.prompt_fp : null }],
       facts,
-      refusal: "Fairlead: a Fairlead agent starts only for a step of an open run, with its ticket (start the run with the fairlead:review skill)."
+      refusal: "Heddle: a Fairlead agent starts only for a step of an open run, with its ticket (start the run with the heddle:review skill)."
     };
   }
   if (run.kind === "none" || run.kind === "closed")
@@ -448,7 +448,7 @@ function spawnGate(input, run, dataDir2) {
       hook_id: "BH-1",
       checks: [{ hook_id: "BH-1", check: "ticket_prompt", result: "deny", subject_fp: typeof facts.prompt_fp === "string" ? facts.prompt_fp : null }],
       facts,
-      refusal: "Fairlead: resuming an agent is not allowed while a braid run is open; each step's subagent starts fresh with its ticket."
+      refusal: "Heddle: resuming an agent is not allowed while a braid run is open; each step's subagent starts fresh with its ticket."
     };
   }
   if (ROUTE_TOOLS.has(tool)) {
@@ -456,7 +456,7 @@ function spawnGate(input, run, dataDir2) {
       hook_id: "BH-1",
       checks: [{ hook_id: "BH-1", check: "agent_type", result: "deny", tool }],
       facts,
-      refusal: `Fairlead: ${tool} is not allowed while a braid run is open; subagents start only through their step's ticket.`
+      refusal: `Heddle: ${tool} is not allowed while a braid run is open; subagents start only through their step's ticket.`
     };
   }
   const tickets = run.kind === "open" ? run.state.tickets : [];
@@ -480,13 +480,13 @@ function spawnGate(input, run, dataDir2) {
   }
   const failed = checks.find((c) => c.result === "deny");
   const reasons = {
-    ticket_prompt: run.kind === "invalid" ? "Fairlead: the run state could not be verified, so no subagent may start." : "Fairlead: during a braid run a subagent starts only with its step's ticket as the whole prompt (call fairlead_ticket).",
-    agent_type: "Fairlead: this ticket is for a different agent type.",
-    foreground: "Fairlead: ticketed steps run in the foreground; do not set run_in_background.",
-    gates_before_check: "Fairlead: this check cannot start until its gates have passed (call fairlead_gate first).",
-    decision_before_step: "Fairlead: this step waits for the person's decision (ask them, then call fairlead_decision)."
+    ticket_prompt: run.kind === "invalid" ? "Heddle: the run state could not be verified, so no subagent may start." : "Heddle: during a braid run a subagent starts only with its step's ticket as the whole prompt (call heddle_ticket).",
+    agent_type: "Heddle: this ticket is for a different agent type.",
+    foreground: "Heddle: ticketed steps run in the foreground; do not set run_in_background.",
+    gates_before_check: "Heddle: this check cannot start until its gates have passed (call heddle_gate first).",
+    decision_before_step: "Heddle: this step waits for the person's decision (ask them, then call heddle_decision)."
   };
-  return { hook_id: "BH-1", checks, facts, refusal: failed ? reasons[failed.check] ?? "Fairlead: refused" : null };
+  return { hook_id: "BH-1", checks, facts, refusal: failed ? reasons[failed.check] ?? "Heddle: refused" : null };
 }
 function pathGuard(input, run, dataDir2) {
   const tool = input.tool_name ?? "";
@@ -498,7 +498,7 @@ function pathGuard(input, run, dataDir2) {
       hook_id: "BH-2",
       checks: [{ hook_id: "BH-2", check: "caller_context", result: ok ? "allow" : "deny" }],
       facts,
-      refusal: ok ? null : "Fairlead: this tool is for the step's subagent, not the main conversation."
+      refusal: ok ? null : "Heddle: this tool is for the step's subagent, not the main conversation."
     };
   }
   const fileTool = WRITE_TOOLS.has(tool) || READ_TOOLS.has(tool) || SHELL_TOOLS.has(tool);
@@ -526,25 +526,25 @@ function pathGuard(input, run, dataDir2) {
     const cf = c.split(BS).join("/");
     const named = (roots) => roots.some((r) => spellings(r).some((s) => c.includes(s) || cf.includes(s.split(BS).join("/"))));
     const byName = /claude_plugin_data|plugins[/\\]data/i.test(command) || localUncOrDevice(command);
-    verdict("protected_path", byName || named(protectedRoots), "Fairlead: that command reaches a protected or private path.");
+    verdict("protected_path", byName || named(protectedRoots), "Heddle: that command reaches a protected or private path.");
     if (datafiles.length)
-      verdict("datafile_path", named(datafiles), "Fairlead: that command names a declared datafile, which stays out of the AI's context.");
+      verdict("datafile_path", named(datafiles), "Heddle: that command names a declared datafile, which stays out of the AI's context.");
     return { hook_id: "BH-2", checks, facts, refusal };
   }
   const rawPaths = pathsOf(tool, ti);
   const paths = rawPaths.map(n);
   const covers = (p, root) => within(p, root) || within(root, p);
   if (rawPaths.some(localUncOrDevice)) {
-    verdict("protected_path", true, "Fairlead: device and network paths to this computer are not allowed during a braid run.");
+    verdict("protected_path", true, "Heddle: device and network paths to this computer are not allowed during a braid run.");
   } else if (WRITE_TOOLS.has(tool)) {
-    verdict("protected_path", paths.some((p) => protectedRoots.some((r) => within(p, r))), "Fairlead: that path is protected during a braid run.");
+    verdict("protected_path", paths.some((p) => protectedRoots.some((r) => within(p, r))), "Heddle: that path is protected during a braid run.");
   } else if (tool === "Grep" || tool === "Glob") {
-    verdict("protected_path", paths.some((p) => secret.some((r) => covers(p, r))), "Fairlead: that search would reach files private to the Fairlead plugin.");
+    verdict("protected_path", paths.some((p) => secret.some((r) => covers(p, r))), "Heddle: that search would reach files private to the Fairlead plugin.");
   } else {
-    verdict("protected_path", paths.some((p) => secret.some((r) => within(p, r))), "Fairlead: that file is private to the Fairlead plugin.");
+    verdict("protected_path", paths.some((p) => secret.some((r) => within(p, r))), "Heddle: that file is private to the Fairlead plugin.");
   }
   if (datafiles.length) {
-    verdict("datafile_path", paths.some((p) => datafiles.some((d) => within(p, d))), "Fairlead: that datafile stays out of the AI's context; its pipeline reads it.");
+    verdict("datafile_path", paths.some((p) => datafiles.some((d) => within(p, d))), "Heddle: that datafile stays out of the AI's context; its pipeline reads it.");
   }
   return { hook_id: "BH-2", checks, facts, refusal };
 }
@@ -602,13 +602,26 @@ function stopGuard(run, input) {
   if (run.kind === "none")
     return { hook_id: "BH-5", checks: [], facts: {}, refusal: null };
   const open = run.kind === "open" && input.stop_hook_active !== true;
-  const reason = "Fairlead: a braid run is still open. Finish it with fairlead_deliver, or ask the person whether to abandon it and record their answer with fairlead_decision (kind abandon).";
+  const reason = "Heddle: a braid run is still open. Finish it with heddle_deliver, or ask the person whether to abandon it and record their answer with heddle_decision (kind abandon).";
   return {
     hook_id: "BH-5",
     checks: [{ hook_id: "BH-5", check: "run_open_at_stop", result: open ? "deny" : "allow" }],
     facts: {},
     refusal: open ? reason : null,
     stdout: open ? JSON.stringify({ decision: "block", reason }) : null
+  };
+}
+function neutralQuestion(input, run) {
+  const allow = { hook_id: "BH-1", checks: [], facts: {}, refusal: null };
+  if (run.kind !== "open" || input.agent_id)
+    return allow;
+  const questions = input.tool_input?.questions ?? [];
+  const steered = questions.some((q) => (q.options ?? []).some((o) => [o.label, o.description].some((t) => typeof t === "string" && /recommend/i.test(t))));
+  if (!steered)
+    return allow;
+  return {
+    ...allow,
+    refusal: "Heddle: judgement calls are asked neutrally. Remove any 'recommended' label or note from the options, list them in the order the step gives, and put the adjudicator's recommendation in your summary as information."
   };
 }
 function handleHook(input, ctx) {
@@ -631,6 +644,8 @@ function handleHook(input, ctx) {
         };
       } else if (SPAWN_TOOLS.has(tool) || ROUTE_TOOLS.has(tool))
         d = spawnGate(input, run, ctx.dataDir);
+      else if (tool === "AskUserQuestion")
+        d = neutralQuestion(input, run);
       else
         d = pathGuard(input, run, ctx.dataDir);
       break;
@@ -686,7 +701,7 @@ if (dataDir) {
     if (stdout !== null)
       process.stdout.write(stdout);
   } catch (err) {
-    process.stderr.write(`fairlead hook: ${err instanceof Error ? err.message : String(err)}
+    process.stderr.write(`heddle hook: ${err instanceof Error ? err.message : String(err)}
 `);
   }
 }

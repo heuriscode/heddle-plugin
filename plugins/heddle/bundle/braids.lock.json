@@ -7,13 +7,19 @@
     "claim_rules_gate@0.1.0": "jcs1:sha256:1200079f6b7f07301fedd0b37581883c2a17a3ce7402a63d7fd7f9b69130be2c",
     "claim_rules_gate@0.2.0": "jcs1:sha256:112fa7f8bdd19d727626fd80b329d313aa004dcf34978cc361ea4bc3c981b2c2",
     "claim_rules_gate@0.3.0": "jcs1:sha256:5385401bb3b32174df3184dd6ba85196d880a050bc6e487710aba192a44fcff5",
+    "format_gate@0.1.0": "jcs1:sha256:c31da22502db62c3ea7f29afc2e04c0ba13d8f963733cbc208c3fcc244ec51e7",
     "option_map_gate@0.1.0": "jcs1:sha256:916f6e4c12d59836f64eac1a3712e3f1f7284139f6da5148b1906d131338ec4c",
     "quote_gate@0.1.0": "jcs1:sha256:6563140bb5f693e1a1df030b0cb939be19c0453824c8feb103a6e1f8874fb429",
     "quote_gate@0.2.0": "jcs1:sha256:100b811d4f6ac3d5f86c42b08bb9cb8318556af6fcb46b8deb68e9cc99fb35f9",
+    "ref_integrity_gate@0.1.0": "jcs1:sha256:67344a7e2d48710d6a18e2380086b6eb1c000ce542a986cd230bd52eb182e672",
+    "resolve_gate@0.1.0": "jcs1:sha256:c3da717c22d20c52a455f1cbacf344ba90d34eb82ba6543059bbc94c5939c01e",
     "revision_gate@0.1.0": "jcs1:sha256:c4af3cb888b00f38232cdeca61169b9315fd42e2523d943220dddf01f79dc3a8",
     "revision_gate@0.2.0": "jcs1:sha256:39c116061f1b1c4d81237b69fd3cdc30148af92dd1721c3cda009f31961a5067",
     "revision_gate@0.3.0": "jcs1:sha256:33458ddb727b2c2fe9f9017d89801137b45321ae1140f545a08d2df86f91de77",
     "revision_gate@0.4.0": "jcs1:sha256:2ee9f803f3c830fb460542ebb0e04e6883121193ff750e3ea7b92b29ef594a93",
+    "revision_gate@0.5.0": "jcs1:sha256:5f4f892af2eff2635ef079afdd4d45c581b3b60bae0f63749117bb94d05b71e1",
+    "scope_gate@0.1.0": "jcs1:sha256:28bc761e314caf944a70057ca7079bd05bc5d2b2dd4b560c768c36a276b9cb53",
+    "tripwire_gate@0.1.0": "jcs1:sha256:137e2b62afff661f8e196c83d80e86fa98ba521d3af94ac37db5d4541af7745b",
     "web_access@0.1.0": "jcs1:sha256:fb503b7a302c470d4c2bcff5caa1cc85ca8e2dfa9f977d0d1527336d4e1d7179"
   },
   "preambles": {
@@ -64,14 +70,24 @@
   },
   "types": {
     "agreed_focus@0.1.0": "jcs1:sha256:262f5b94ce8c54f2a2e2a4a7a897667ca70d21c5362db61948e08539c3ae9f36",
+    "chain_map@0.1.0": "jcs1:sha256:029f54fd48152ad229620f1958b0bcb16c1c8c1ca3e8058e50cb305bffd0e81f",
+    "change_set@0.1.0": "jcs1:sha256:818b56316b2af8e9de8595ba8f9dd6f25748f69668d8ae13e12560bb10858953",
+    "decision_card@0.1.0": "jcs1:sha256:5937dc7b25b93db9eaf2be31a27102f38aef25e66ac7a21a0d512332b31fe836",
     "decisions@0.1.0": "jcs1:sha256:2ae2e7d5186580b63f3a29112a75fcaf4aa876f35a4a49c74ad604e364a15e64",
+    "document@0.1.0": "jcs1:sha256:3851a6e6bd564b394ee2c1b49c0bd15946779b7f89691a9be1ea98c1d0d7556f",
     "draft@0.1.0": "jcs1:sha256:abc1f287d1f39fb753e50f837e044f70651a8f8da0909ef610c50d7b141c855b",
     "evidence_table@0.1.0": "jcs1:sha256:63ab05f6b07b2d578ae9760b4c567b27e4d2654e843f8688caaac9c1e123bbc5",
     "findings@0.1.0": "jcs1:sha256:4130ba2acf06af438d66fd34d190a29f344bb78cb6c19f78418eab931b1bc61d",
+    "frame@0.1.0": "jcs1:sha256:901dbbf0f8edd8620bccbdcdfe5e24411a65315462bc58524d27f70d7734961d",
     "gate_result@0.1.0": "jcs1:sha256:b5dc93ea6f04bdd7b7914d53895914a3caf6488b0cdaf8b607374061247a867f",
     "option_map@0.1.0": "jcs1:sha256:4a78656c903dc7f8b50ad8717cadec420661ef61edbeb97d253dd9dc27b9d2e9",
+    "pack_choice@0.1.0": "jcs1:sha256:31f614a254bb388e7691b7b0771063b905e40b7f3c73c9c17d6c67c1d3b4e425",
+    "provenance_register@0.1.0": "jcs1:sha256:0f24560ba29e51b072478f587cf164a38733e7044dd329856c0cef37a44536a2",
     "revision_log@0.1.0": "jcs1:sha256:d1cd44373ba8e34c388030e6d6c7d39dccea5deaf9cb295573c548a6c1761cf5",
+    "revision_log@0.2.0": "jcs1:sha256:bae8b5688fa1cc5a5825e533c4c74923cedaf0e5467ac5e25adfb92978ba32c0",
+    "scope_verdict@0.1.0": "jcs1:sha256:ea6d84c9c10ddf5706983e12e027cdc3012e4fcd168f5de08350b74769ca31ac",
     "search_record@0.1.0": "jcs1:sha256:85d618e821053877704fdf2fa34a03553cb85a0967a66f96317eced59226d305",
-    "source_register@0.1.0": "jcs1:sha256:db98d9aff1e792903a0c98f4c16ee23714389070d52029cae6c0a1969ec9dbea"
+    "source_register@0.1.0": "jcs1:sha256:db98d9aff1e792903a0c98f4c16ee23714389070d52029cae6c0a1969ec9dbea",
+    "split_view@0.1.0": "jcs1:sha256:304d52d1aecdd5202ecda5a73614d4c591b7073d3e21ef8eddd11e1aa7bf3551"
   }
 }

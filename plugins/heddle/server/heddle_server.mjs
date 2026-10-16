@@ -19560,14 +19560,14 @@ function writeState(dataDir, sessionId, state) {
 }
 
 // packages/hooks/dist/hooks.js
-var MCP = "mcp__plugin_fairlead_fairlead__";
-var START = `${MCP}fairlead_run_start`;
-var CALLER_TOOLS = /* @__PURE__ */ new Set([`${MCP}fairlead_inputs`, `${MCP}fairlead_output`]);
+var MCP = "mcp__plugin_heddle_heddle__";
+var START = `${MCP}heddle_run_start`;
+var CALLER_TOOLS = /* @__PURE__ */ new Set([`${MCP}heddle_inputs`, `${MCP}heddle_output`]);
 var WIN = process.platform === "win32";
 var BS = String.fromCharCode(92);
 
 // packages/mcp-server/dist/run.js
-var MCP_PREFIX = "mcp__plugin_fairlead_fairlead__";
+var MCP_PREFIX = "mcp__plugin_heddle_heddle__";
 var CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 function newId(prefix, now = Date.now()) {
   let bits = BigInt(now) << 80n | BigInt(`0x${randomBytes3(10).toString("hex")}`);
@@ -19623,7 +19623,7 @@ var Run = class {
     this.opts = opts;
     const now = opts.now();
     this.runId = newId("run", now.getTime());
-    this.folder = join4(opts.projectDir, "fairlead-runs", this.runId);
+    this.folder = join4(opts.projectDir, "heddle-runs", this.runId);
     mkdirSync3(join4(this.folder, "outputs"), { recursive: true });
     this.log = new EventLog({ now: opts.now });
     this.startingPrompt = startingPrompt.slice(0, 4e3);
@@ -19903,7 +19903,7 @@ var Run = class {
         return line[1].split(",").map((s) => s.trim()).filter((s) => s.length > 0);
     }
     const thread = this.opts.bundle.threads.get(threadRef);
-    const tools = [`${MCP_PREFIX}fairlead_inputs`, `${MCP_PREFIX}fairlead_output`];
+    const tools = [`${MCP_PREFIX}heddle_inputs`, `${MCP_PREFIX}heddle_output`];
     if (thread?.tools.includes("fetch"))
       tools.push("WebFetch");
     if (thread?.tools.includes("search"))
@@ -20342,16 +20342,16 @@ var obj = (props, required = []) => ({
   additionalProperties: false
 });
 var TOOLS = [
-  { name: "fairlead_run_start", description: "Start a Fairlead braid run. Pass a fresh random nonce and the person's starting request verbatim.", inputSchema: obj({ nonce: str, prompt: str }, ["nonce", "prompt"]) },
-  { name: "fairlead_arm", description: "Call straight after fairlead_run_start: confirms the plugin's hooks are live for this run.", inputSchema: obj({}) },
-  { name: "fairlead_next", description: "What to do next in the open run: the ready steps and exactly how to run each.", inputSchema: obj({}) },
-  { name: "fairlead_ticket", description: "Issue the ticket for a ready step that runs as a subagent. Then start that subagent with the Agent tool, in the foreground, with the ticket text as its whole prompt.", inputSchema: obj({ step_id: str }, ["step_id"]) },
-  { name: "fairlead_inputs", description: "For a step's subagent only: fetch your task and inputs with your ticket id. Long inputs come in parts: call again with part 2, 3 ... as the reply says.", inputSchema: obj({ ticket: str, part: { type: "integer", minimum: 1 } }, ["ticket"]) },
-  { name: "fairlead_output", description: "For a step's subagent only: hand back one output port under your ticket. content is the JSON value (or text for text ports).", inputSchema: obj({ ticket: str, port: str, content: {} }, ["ticket", "port", "content"]) },
-  { name: "fairlead_gate", description: "Run a ready gate step on the user's machine.", inputSchema: obj({ step_id: str }, ["step_id"]) },
-  { name: "fairlead_step", description: "Start a step that runs in this conversation (refine or decide) before asking the person. A decide step's material can come in parts: call again with the same step_id and part 2, 3 ... as the reply says.", inputSchema: obj({ step_id: str, part: { type: "integer", minimum: 1 } }, ["step_id"]) },
-  { name: "fairlead_decision", description: "Record the person's decision after they answered (AskUserQuestion or their reply). kind: focus_accept (with focus, the agreed_focus JSON), escalation, waiver, output_choice or abandon. A waiver names the failed step (step_id), or several failed steps (step_ids) when the person waived them all with one answer. text: their decision in a sentence.", inputSchema: obj({ kind: str, step_id: str, step_ids: { type: "array", items: str }, text: str, focus: {} }, ["kind", "text"]) },
-  { name: "fairlead_deliver", description: "Finish the run: builds the chosen results, generates the practice headline and freezes the run record. choice_ids from the braid's output menu.", inputSchema: obj({ choice_ids: { type: "array", items: str } }, ["choice_ids"]) }
+  { name: "heddle_run_start", description: "Start a Fairlead braid run. Pass a fresh random nonce and the person's starting request verbatim.", inputSchema: obj({ nonce: str, prompt: str }, ["nonce", "prompt"]) },
+  { name: "heddle_arm", description: "Call straight after heddle_run_start: confirms the plugin's hooks are live for this run.", inputSchema: obj({}) },
+  { name: "heddle_next", description: "What to do next in the open run: the ready steps and exactly how to run each.", inputSchema: obj({}) },
+  { name: "heddle_ticket", description: "Issue the ticket for a ready step that runs as a subagent. Then start that subagent with the Agent tool, in the foreground, with the ticket text as its whole prompt.", inputSchema: obj({ step_id: str }, ["step_id"]) },
+  { name: "heddle_inputs", description: "For a step's subagent only: fetch your task and inputs with your ticket id. Long inputs come in parts: call again with part 2, 3 ... as the reply says.", inputSchema: obj({ ticket: str, part: { type: "integer", minimum: 1 } }, ["ticket"]) },
+  { name: "heddle_output", description: "For a step's subagent only: hand back one output port under your ticket. content is the JSON value (or text for text ports).", inputSchema: obj({ ticket: str, port: str, content: {} }, ["ticket", "port", "content"]) },
+  { name: "heddle_gate", description: "Run a ready gate step on the user's machine.", inputSchema: obj({ step_id: str }, ["step_id"]) },
+  { name: "heddle_step", description: "Start a step that runs in this conversation (refine or decide) before asking the person. A decide step's material can come in parts: call again with the same step_id and part 2, 3 ... as the reply says.", inputSchema: obj({ step_id: str, part: { type: "integer", minimum: 1 } }, ["step_id"]) },
+  { name: "heddle_decision", description: "Record the person's decision after they answered (AskUserQuestion or their reply). kind: focus_accept (with focus, the agreed_focus JSON), escalation, waiver, output_choice or abandon. A waiver names the failed step (step_id), or several failed steps (step_ids) when the person waived them all with one answer. text: their decision in a sentence.", inputSchema: obj({ kind: str, step_id: str, step_ids: { type: "array", items: str }, text: str, focus: {} }, ["kind", "text"]) },
+  { name: "heddle_deliver", description: "Finish the run: builds the chosen results, generates the practice headline and freezes the run record. choice_ids from the braid's output menu.", inputSchema: obj({ choice_ids: { type: "array", items: str } }, ["choice_ids"]) }
 ];
 var text = (v) => typeof v === "string" ? v : "";
 var ok = (msg) => ({ text: msg });
@@ -20379,15 +20379,15 @@ var FairleadServer = class {
   }
   async call(name, args, meta = {}) {
     try {
-      if (name === "fairlead_run_start")
+      if (name === "heddle_run_start")
         return this.start(args, meta);
       const run = this.run;
       if (!run)
-        return refused("No Fairlead run is open. Start one with fairlead_run_start.");
+        return refused("No Fairlead run is open. Start one with heddle_run_start.");
       run.ingest();
       run.expireTickets();
       run.verifyPorts();
-      if (run.integrity.length > 0 && name !== "fairlead_next" && !(name === "fairlead_decision" && text(args.kind) === "abandon")) {
+      if (run.integrity.length > 0 && name !== "heddle_next" && !(name === "heddle_decision" && text(args.kind) === "abandon")) {
         run.publish();
         return refused(integrityMessage(run));
       }
@@ -20400,31 +20400,31 @@ var FairleadServer = class {
       }
       let result;
       switch (name) {
-        case "fairlead_arm":
+        case "heddle_arm":
           result = this.arm(run);
           break;
-        case "fairlead_next":
+        case "heddle_next":
           result = this.next(run);
           break;
-        case "fairlead_ticket":
+        case "heddle_ticket":
           result = this.ticket(run, text(args.step_id));
           break;
-        case "fairlead_inputs":
+        case "heddle_inputs":
           result = this.inputs(run, text(args.ticket), meta, typeof args.part === "number" ? args.part : 1);
           break;
-        case "fairlead_output":
+        case "heddle_output":
           result = this.output(run, text(args.ticket), text(args.port), args.content, meta);
           break;
-        case "fairlead_gate":
+        case "heddle_gate":
           result = await this.runGateStep(run, text(args.step_id));
           break;
-        case "fairlead_step":
+        case "heddle_step":
           result = this.mainStep(run, text(args.step_id), typeof args.part === "number" ? args.part : 1);
           break;
-        case "fairlead_decision":
+        case "heddle_decision":
           result = this.decision(run, args);
           break;
-        case "fairlead_deliver":
+        case "heddle_deliver":
           result = this.deliver(run, Array.isArray(args.choice_ids) ? args.choice_ids.map(String) : []);
           break;
         default:
@@ -20445,7 +20445,7 @@ var FairleadServer = class {
   start(args, meta) {
     const nonce = text(args.nonce);
     if (!nonce)
-      throw new Refusal("fairlead_run_start needs a fresh random nonce.");
+      throw new Refusal("heddle_run_start needs a fresh random nonce.");
     if (this.seenNonces.has(nonce))
       throw new Refusal("That nonce was already used; pass a fresh one.");
     if (this.run && !this.run.delivered && !this.run.abandoned)
@@ -20467,26 +20467,26 @@ var FairleadServer = class {
     run.bindSession();
     run.ingest();
     run.publish();
-    return ok(`Run ${run.runId} started for "${this.bundle.template.template_id}" ${this.bundle.template.version}. Its folder is fairlead-runs/${run.runId}/. Now call fairlead_arm.`);
+    return ok(`Run ${run.runId} started for "${this.bundle.template.template_id}" ${this.bundle.template.version}. Its folder is heddle-runs/${run.runId}/. Now call heddle_arm.`);
   }
   arm(run) {
     if (run.armed)
-      return ok("Hooks are already armed for this run. Call fairlead_next.");
+      return ok("Hooks are already armed for this run. Call heddle_next.");
     const bound = run.bindSession();
     run.ingest();
     const need = ["BH-1", "BH-2", "BH-3"];
     const missing = need.filter((h) => run.heartbeats[h] === void 0);
     if (!bound || missing.length > 0) {
-      return ok("The plugin's hooks did not answer for this run (they may be turned off). The run continues, but its practice headline will show weaker statuses for separation, blind checks and gates. Call fairlead_next.");
+      return ok("The plugin's hooks did not answer for this run (they may be turned off). The run continues, but its practice headline will show weaker statuses for separation, blind checks and gates. Call heddle_next.");
     }
-    const hookScript = this.opts.pluginRoot ? join6(this.opts.pluginRoot, "hooks", "fairlead_hook.mjs") : null;
+    const hookScript = this.opts.pluginRoot ? join6(this.opts.pluginRoot, "hooks", "heddle_hook.mjs") : null;
     const hooksJson = this.opts.pluginRoot ? join6(this.opts.pluginRoot, "hooks", "hooks.json") : null;
     const fileFp = (p) => p ? run.textFingerprint(safeRead(p)) : jcs1({ hook: "unpackaged" });
     const script = fileFp(hookScript);
     run.log.append("hooks_armed", {
       source: "mcp_server",
       hooks: [
-        { hook_id: "BH-1", event: "PreToolUse", matcher: "Agent|Task|SendMessage|Workflow|fairlead_run_start", script_fingerprint: script, heartbeat_seq: run.heartbeats["BH-1"] ?? null },
+        { hook_id: "BH-1", event: "PreToolUse", matcher: "Agent|Task|SendMessage|Workflow|heddle_run_start", script_fingerprint: script, heartbeat_seq: run.heartbeats["BH-1"] ?? null },
         { hook_id: "BH-2", event: "PreToolUse", matcher: "Read|Write|Edit|MultiEdit|NotebookEdit|Grep|Glob|Bash|PowerShell|fairlead_*", script_fingerprint: script, heartbeat_seq: run.heartbeats["BH-2"] ?? null },
         { hook_id: "BH-3", event: "PostToolUse", matcher: ".*", script_fingerprint: script, heartbeat_seq: run.heartbeats["BH-3"] ?? null },
         { hook_id: "BH-3", event: "UserPromptSubmit", matcher: "", script_fingerprint: script, heartbeat_seq: null },
@@ -20498,7 +20498,7 @@ var FairleadServer = class {
     });
     run.armed = true;
     run.rotateKey();
-    return ok("Hooks are armed for this run. Call fairlead_next.");
+    return ok("Hooks are armed for this run. Call heddle_next.");
   }
   next(run) {
     if (run.delivered)
@@ -20516,13 +20516,13 @@ var FairleadServer = class {
     const [only] = failed;
     if (failed.length === 1 && only) {
       const s = only;
-      lines2.push(`Step ${s.step.step_id} (${s.step.kind}) failed. Tell the person plainly, ask whether to waive it and continue or to abandon the run, then call fairlead_decision with kind waiver (step_id ${s.step.step_id}) or abandon.`);
+      lines2.push(`Step ${s.step.step_id} (${s.step.kind}) failed. Tell the person plainly, ask with these options in this order, none marked as recommended: "Waive it and continue", "Stop the run". Then call heddle_decision with kind waiver (step_id ${s.step.step_id}) or abandon.`);
     } else if (failed.length > 1) {
       const ids = failed.map((s) => s.step.step_id);
-      lines2.push(`Steps ${ids.join(", ")} failed. Tell the person plainly what failed, ask in one question whether to waive them all and continue or to abandon the run, then call fairlead_decision once with kind waiver and step_ids ${JSON.stringify(ids)}, or abandon. One answer covers one decision.`);
+      lines2.push(`Steps ${ids.join(", ")} failed. Tell the person plainly what failed, ask in one question with these options in this order, none marked as recommended: "Waive them all and continue", "Stop the run". Then call heddle_decision once with kind waiver and step_ids ${JSON.stringify(ids)}, or abandon. One answer covers one decision.`);
     }
     if (lines2.length === 0)
-      lines2.push("Nothing is ready. If a subagent is running, wait for it to finish, then call fairlead_next again.");
+      lines2.push("Nothing is ready. If a subagent is running, wait for it to finish, then call heddle_next again.");
     return ok(lines2.join("\n"));
   }
   // ---------------------------------------------------------------- tickets, inputs, outputs
@@ -20533,7 +20533,7 @@ var FairleadServer = class {
     if (!s.step.thread_ref)
       throw new Refusal(`Step ${stepId} does not run as a subagent.`);
     if (s.status !== "pending" || !run.readySteps().includes(s))
-      throw new Refusal(`Step ${stepId} is not ready (call fairlead_next).`);
+      throw new Refusal(`Step ${stepId} is not ready (call heddle_next).`);
     const kind = s.step.kind;
     const ticketId = newId("tkt", this.now().getTime());
     const contextId = run.newContext();
@@ -20541,7 +20541,7 @@ var FairleadServer = class {
     const timeout = run.template.stop.ticket_timeout[kind] ?? 1800;
     const expires = this.now().getTime() + timeout * 1e3;
     const text2 = `TICKET: ${ticketId}
-You are running step ${stepId} of a Fairlead braid. Call fairlead_inputs with ticket ${ticketId} first.`;
+You are running step ${stepId} of a Fairlead braid. Call heddle_inputs with ticket ${ticketId} first.`;
     run.startStep(stepId, contextId, "separate_context");
     const issued = run.log.append("ticket_issued", {
       source: "mcp_server",
@@ -20581,7 +20581,7 @@ ${text2}`);
       return void 0;
     return run.spoolEntries().find((e) => e.tool_use_id === meta.toolUseId && e.event === "PreToolUse" && e.tool === `${MCP_PREFIX}${tool}`);
   }
-  /** The caller of fairlead_inputs or fairlead_output: the subagent holding the live ticket. */
+  /** The caller of heddle_inputs or heddle_output: the subagent holding the live ticket. */
   caller(run, ticketId, tool, meta) {
     const ticket = run.tickets.get(ticketId);
     if (!ticket)
@@ -20613,13 +20613,13 @@ ${text2}`);
    * recorded once (inputs_served), and handed over in parts well under the limit.
    */
   inputs(run, ticketId, meta, part) {
-    const { ticket, agentId } = this.caller(run, ticketId, "fairlead_inputs", meta);
+    const { ticket, agentId } = this.caller(run, ticketId, "heddle_inputs", meta);
     ticket.inputParts ??= splitParts(this.buildInputs(run, ticket, agentId));
     const parts = ticket.inputParts;
     const k = Number.isInteger(part) && part >= 1 ? part : 1;
     if (k > parts.length)
       throw new Refusal(`There are ${String(parts.length)} parts.`);
-    const head = parts.length === 1 ? "" : `[Part ${String(k)} of ${String(parts.length)}.${k < parts.length ? ` Call fairlead_inputs again with ticket ${ticket.ticket_id} and part ${String(k + 1)} before you start.` : " This is the last part."}]
+    const head = parts.length === 1 ? "" : `[Part ${String(k)} of ${String(parts.length)}.${k < parts.length ? ` Call heddle_inputs again with ticket ${ticket.ticket_id} and part ${String(k + 1)} before you start.` : " This is the last part."}]
 
 `;
     return ok(head + (parts[k - 1] ?? ""));
@@ -20670,12 +20670,12 @@ ${JSON.stringify(schemaOf(c))}` : `${p}: plain text (Markdown).`;
     }).join("\n\n");
     return `${prompt}
 ---
-When you have finished, hand back each of these outputs with fairlead_output (ticket ${ticket.ticket_id}): ${produces.map((p) => `${p} (${run.portSpec(p, s.step).contract ?? "text"})`).join(", ")}. Then reply "done".
+When you have finished, hand back each of these outputs with heddle_output (ticket ${ticket.ticket_id}): ${produces.map((p) => `${p} (${run.portSpec(p, s.step).contract ?? "text"})`).join(", ")}. Then reply "done".
 
 ${shapes}`;
   }
   output(run, ticketId, port, content, meta) {
-    const { ticket, agentId } = this.caller(run, ticketId, "fairlead_output", meta);
+    const { ticket, agentId } = this.caller(run, ticketId, "heddle_output", meta);
     const s = run.steps.get(ticket.step_id);
     if (!s)
       throw new Refusal("Unknown step.");
@@ -20710,7 +20710,7 @@ ${shapes}`;
     if (!s?.step.gate_ref)
       throw new Refusal(`Step ${stepId} is not a gate step.`);
     if (s.status !== "pending" || !run.readySteps().includes(s))
-      throw new Refusal(`Step ${stepId} is not ready (call fairlead_next).`);
+      throw new Refusal(`Step ${stepId} is not ready (call heddle_next).`);
     const gateDir = this.bundle.gateDirs.get(s.step.gate_ref);
     if (!gateDir)
       throw new Refusal(`Gate ${s.step.gate_ref} is not in this braid.`);
@@ -20737,20 +20737,20 @@ ${shapes}`;
     const passed = result.status === "pass" || result.status === "warn" || result.status === "skipped";
     run.endStep(stepId, passed ? "done" : "failed");
     s.gate_status = result.status;
-    return passed ? ok(`Gate ${s.step.gate_ref} ${result.status}. Call fairlead_next.`) : ok(`Gate ${s.step.gate_ref} ${result.status}${result.problem ? `: ${result.problem}` : ""}. Call fairlead_next.`);
+    return passed ? ok(`Gate ${s.step.gate_ref} ${result.status}. Call heddle_next.`) : ok(`Gate ${s.step.gate_ref} ${result.status}${result.problem ? `: ${result.problem}` : ""}. Call heddle_next.`);
   }
   mainStep(run, stepId, part) {
     const s = run.steps.get(stepId);
     if (!s)
       throw new Refusal(`Unknown step ${stepId}.`);
     if (!["refine", "decide"].includes(s.step.kind))
-      throw new Refusal(`Step ${stepId} is a ${s.step.kind} step; use the tool fairlead_next names.`);
+      throw new Refusal(`Step ${stepId} is a ${s.step.kind} step; use the tool heddle_next names.`);
     const key = `${run.runId}/${stepId}`;
     if (part !== 1) {
       const parts2 = this.stepParts.get(key);
       if (!parts2 || s.status !== "running")
-        throw new Refusal(`Call fairlead_step with step_id ${stepId} (no part) first.`);
-      return ok(partOf(parts2, part, (k) => `Call fairlead_step again with step_id ${stepId} and part ${String(k)} before you ask the person.`));
+        throw new Refusal(`Call heddle_step with step_id ${stepId} (no part) first.`);
+      return ok(partOf(parts2, part, (k) => `Call heddle_step again with step_id ${stepId} and part ${String(k)} before you ask the person.`));
     }
     if (s.status !== "pending" || !run.readySteps().includes(s))
       throw new Refusal(`Step ${stepId} is not ready.`);
@@ -20767,15 +20767,15 @@ ${JSON.stringify(run.gateResults(stepId).map((r) => r.result))}`);
         material.push(`### ${read}
 ${t.text}`);
     }
-    const instruction = s.step.kind === "refine" ? "Refine the topic with the person: propose an agreed focus (research question, scope, inclusion rules), ask them with AskUserQuestion whether to accept it, then call fairlead_decision with kind focus_accept, step_id " + stepId + ", text summarising their answer, and focus set to the agreed_focus JSON." : `Show the person what needs their decision for step ${stepId} (in plain words), ask them with AskUserQuestion, then call fairlead_decision with kind escalation, step_id ${stepId} and text summarising what they decided.`;
+    const instruction = s.step.kind === "refine" ? "Refine the topic with the person: propose an agreed focus (research question, scope, inclusion rules), ask them with AskUserQuestion whether to accept it, then call heddle_decision with kind focus_accept, step_id " + stepId + ", text summarising their answer, and focus set to the agreed_focus JSON." : `Show the person what needs their decision for step ${stepId} (in plain words), then ask them with AskUserQuestion, using exactly these options in this order: "Accept the adjudicator's decisions as they stand", "Change some decisions", "Stop the run". Use the same wording and order every time, and never mark an option as recommended: the adjudicator's recommendation is information in your summary, not a choice made for them. Then call heddle_decision with kind escalation, step_id ${stepId} and text summarising what they decided.`;
     const body = material.length === 0 ? instruction : `${instruction}
 
-What the person is deciding on, from this run's records. Summarise it for them in plain words (what each finding says and what the adjudicator recommended, with its reasons); do not paste the raw data.
+What the person is deciding on, from this run's records. Summarise it for them in plain words; do not paste the raw data. Show each finding as one block: what it says, its evidence passage (the quoted source text), the gate result for that claim if a gate checked it, and what the adjudicator recommended, with its reasons. Put blocking findings first, then warnings; collapse repeats of the same issue into one block that says how many times it occurs.
 
 ${material.join(BLANK_LINE)}`;
     const parts = splitParts(body);
     this.stepParts.set(key, parts);
-    return ok(partOf(parts, 1, (k) => `Call fairlead_step again with step_id ${stepId} and part ${String(k)} before you ask the person.`));
+    return ok(partOf(parts, 1, (k) => `Call heddle_step again with step_id ${stepId} and part ${String(k)} before you ask the person.`));
   }
   decision(run, args) {
     const kind = text(args.kind);
@@ -20795,7 +20795,7 @@ ${material.join(BLANK_LINE)}`;
     if (stepId && !s)
       throw new Refusal(`Unknown step ${stepId}.`);
     if (s && (s.step.kind === "refine" || s.step.kind === "decide") && s.status !== "running") {
-      throw new Refusal(`Start step ${s.step.step_id} with fairlead_step first, then ask the person.`);
+      throw new Refusal(`Start step ${s.step.step_id} with heddle_step first, then ask the person.`);
     }
     if (kind === "focus_accept") {
       if (!s || s.step.kind !== "refine")
@@ -20807,7 +20807,7 @@ ${material.join(BLANK_LINE)}`;
     const startedSeq = s && (s.step.kind === "refine" || s.step.kind === "decide") ? run.log.ofType("step_started").filter((e) => e.step_id === s.step.step_id).at(-1)?.seq ?? 0 : run.log.ofType("decision_recorded").at(-1)?.seq ?? 0;
     const answer = run.findAnswer(startedSeq);
     if (!answer)
-      throw new Refusal("No answer from the person is on record for this decision. Ask them first (AskUserQuestion), then call fairlead_decision.");
+      throw new Refusal("No answer from the person is on record for this decision. Ask them first (AskUserQuestion), then call heddle_decision.");
     run.useAnswer(answer.seq);
     const decisionId = newId("dec", this.now().getTime());
     const textPath = run.writeJson(`decisions/${decisionId}.json`, {
@@ -20846,13 +20846,13 @@ ${material.join(BLANK_LINE)}`;
     } else if (s && s.status === "running" && s.step.kind === "decide") {
       run.endStep(s.step.step_id, "done");
     }
-    return ok("Decision recorded. Call fairlead_next.");
+    return ok("Decision recorded. Call heddle_next.");
   }
   // ---------------------------------------------------------------- deliver
   deliver(run, choiceIds) {
     const s = [...run.steps.values()].find((x) => x.step.kind === "deliver");
     if (!s || !run.readySteps().includes(s))
-      throw new Refusal("The run is not ready to deliver (call fairlead_next).");
+      throw new Refusal("The run is not ready to deliver (call heddle_next).");
     const menu = run.template.output_menu;
     const chosen = choiceIds.length ? choiceIds : ["review_md"];
     for (const c of chosen)
@@ -20932,9 +20932,9 @@ function splitParts(text2, max = 3e4) {
   parts.push(rest);
   return parts;
 }
-var MAIN_ONLY = /* @__PURE__ */ new Set(["fairlead_ticket", "fairlead_gate", "fairlead_step", "fairlead_decision", "fairlead_deliver", "fairlead_next"]);
+var MAIN_ONLY = /* @__PURE__ */ new Set(["heddle_ticket", "heddle_gate", "heddle_step", "heddle_decision", "heddle_deliver", "heddle_next"]);
 function integrityMessage(run) {
-  return `This run can no longer be trusted: ${run.integrity.join("; ")}. Tell the person plainly. The only way forward is to abandon this run (ask them, then call fairlead_decision with kind abandon) and start a new one.`;
+  return `This run can no longer be trusted: ${run.integrity.join("; ")}. Tell the person plainly. The only way forward is to abandon this run (ask them, then call heddle_decision with kind abandon) and start a new one.`;
 }
 function howTo(run, stepId) {
   const s = run.steps.get(stepId);
@@ -20942,13 +20942,13 @@ function howTo(run, stepId) {
     return "";
   const k = s.step.kind;
   if (s.step.thread_ref)
-    return `Step ${stepId} (${k}) is ready: call fairlead_ticket with step_id ${stepId}.`;
+    return `Step ${stepId} (${k}) is ready: call heddle_ticket with step_id ${stepId}.`;
   if (s.step.gate_ref)
-    return `Step ${stepId} (${k}, gate ${s.step.gate_ref}) is ready: call fairlead_gate with step_id ${stepId}.`;
+    return `Step ${stepId} (${k}, gate ${s.step.gate_ref}) is ready: call heddle_gate with step_id ${stepId}.`;
   if (k === "refine" || k === "decide")
-    return `Step ${stepId} (${k}) is ready: call fairlead_step with step_id ${stepId}, then follow its instructions with the person.`;
+    return `Step ${stepId} (${k}) is ready: call heddle_step with step_id ${stepId}, then follow its instructions with the person.`;
   if (k === "deliver") {
-    return `Step ${stepId} (deliver) is ready: ask the person which results they want (${run.template.output_menu.map((m) => `${m.choice_id}: ${m.label}`).join("; ")}), then call fairlead_deliver with their choice_ids.`;
+    return `Step ${stepId} (deliver) is ready: ask the person which results they want (${run.template.output_menu.map((m) => `${m.choice_id}: ${m.label}`).join("; ")}), then call heddle_deliver with their choice_ids.`;
   }
   return `Step ${stepId} (${k}) is ready.`;
 }
@@ -20999,7 +20999,7 @@ async function handle(line) {
           result: {
             protocolVersion: msg.params?.protocolVersion ?? "2025-06-18",
             capabilities: { tools: {} },
-            serverInfo: { name: "fairlead", version: "0.1.0" }
+            serverInfo: { name: "heddle", version: "0.1.0" }
           }
         });
         return;
@@ -21024,8 +21024,8 @@ async function handle(line) {
         send({ jsonrpc: "2.0", id, error: { code: -32601, message: `method not found: ${String(msg.method)}` } });
     }
   } catch (err) {
-    process.stderr.write(`fairlead server: ${err instanceof Error ? err.stack ?? err.message : String(err)}
+    process.stderr.write(`heddle server: ${err instanceof Error ? err.stack ?? err.message : String(err)}
 `);
-    send({ jsonrpc: "2.0", id, result: { content: [{ type: "text", text: "Fairlead hit an internal error; the run is unchanged." }], isError: true } });
+    send({ jsonrpc: "2.0", id, result: { content: [{ type: "text", text: "Heddle hit an internal error; the run is unchanged." }], isError: true } });
   }
 }
